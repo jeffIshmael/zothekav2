@@ -41,9 +41,11 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     try {
       const [monitor, kycRes, elementPayInfo] = await Promise.all([
         getMonitor().catch(() => null),
-        fetch(`/api/kyc/status?email=${encodeURIComponent(email)}`)
+        fetch(`/api/users/me`, {
+          headers: { "X-User-Email": email }
+        })
           .then(r => r.json())
-          .catch(() => ({ verified: false, firstName: null, phone: null, network: null, walletAddress: null })),
+          .catch(() => ({ kyc_verified: false, kyc_phone: null, smart_wallet_address: null })),
         fetch(`/api/elementpay/info`)
           .then(r => r.json())
           .catch(() => null)
@@ -55,12 +57,12 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         setRate(resolveUsdToMwkRate(monitor.usd_to_mwk_rate));
       }
 
-      setKycVerified(kycRes.verified);
-      setKycFirstName(kycRes.firstName || null);
-      setKycPhone(kycRes.phone || null);
-      setKycNetwork(kycRes.network || null);
-      setKycWalletAddress(kycRes.walletAddress || null);
-      setPendingPurchasesCount(kycRes.pendingPurchasesCount || 0);
+      setKycVerified(kycRes.kyc_verified);
+      setKycFirstName(null);
+      setKycPhone(kycRes.kyc_phone || null);
+      setKycNetwork("base");
+      setKycWalletAddress(kycRes.smart_wallet_address || null);
+      setPendingPurchasesCount(0);
     } catch (err) {
       console.error("Failed to load app data", err);
     } finally {

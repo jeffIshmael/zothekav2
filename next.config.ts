@@ -10,8 +10,8 @@ const nextConfig: NextConfig = {
     // Proxy API calls through Next.js so the browser avoids cross-origin (CORS) blocks.
     return [
       {
-        source: "/backend/:path*",
-        destination: `${backendUrl}/:path*`,
+        source: "/api/:path*",
+        destination: `${backendUrl}/api/:path*`,
       },
     ];
   },
