@@ -1,20 +1,15 @@
 "use client";
 
-import { useLoginWithOAuth, useLoginWithEmail } from "@privy-io/react-auth";
+import { usePrivy } from "@privy-io/react-auth";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useAuth } from "@/lib/auth";
+import { isPrivyConfigured } from "@/lib/privy-config";
 
 export default function SignInPage() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
-  const { initOAuth } = useLoginWithOAuth();
-  const { sendCode, loginWithCode, state: emailState } = useLoginWithEmail();
-
-  const [view, setView] = useState<"options" | "email" | "otp">("options");
-  const [email, setEmail] = useState("");
-  const [otp, setOtp] = useState("");
-  const [error, setError] = useState("");
+  const { login, ready } = usePrivy();
 
   const goToApp = () => router.replace("/app");
 
@@ -22,38 +17,7 @@ export default function SignInPage() {
     if (isAuthenticated) {
       goToApp();
     }
-  }, [isAuthenticated, router]);
-
-  const handleGoogle = () => {
-    initOAuth({ provider: "google" });
-  };
-
-  const handleSendCode = async () => {
-    if (!email) {
-      setError("Please enter a valid email");
-      return;
-    }
-    setError("");
-    try {
-      await sendCode({ email });
-      setView("otp");
-    } catch (e: any) {
-      setError(e?.message || "Failed to send code");
-    }
-  };
-
-  const handleVerifyOtp = async () => {
-    if (!otp) {
-      setError("Please enter the code");
-      return;
-    }
-    setError("");
-    try {
-      await loginWithCode({ code: otp });
-    } catch (e: any) {
-      setError(e?.message || "Invalid code");
-    }
-  };
+  }, [isAuthenticated, router, goToApp]);
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -99,77 +63,22 @@ export default function SignInPage() {
             Sign up in seconds. Track purchases and withdraw USD to MWK anytime.
           </p>
 
-          <div className="mt-auto pt-8 flex flex-col gap-3">
-            {error && <div className="text-red-500 text-sm font-medium text-center">{error}</div>}
+          {!isPrivyConfigured ? (
+            <div className="mt-4 rounded-xl bg-amber-50 p-4 text-sm leading-relaxed text-amber-900">
+              Add your Privy keys to <code className="font-mono">.env</code> to enable sign-in.
+              Use a <strong>Web</strong> client ID from the Privy dashboard.
+            </div>
+          ) : null}
 
-            {view === "options" && (
-              <>
-                <button
-                  onClick={handleGoogle}
-                  className="flex h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-brand-green text-[16px] font-bold text-white shadow-lg transition-transform active:scale-[0.98]"
-                >
-                  Continue with Google
-                </button>
-                <button
-                  onClick={() => setView("email")}
-                  className="flex h-[52px] w-full items-center justify-center gap-2 rounded-xl border border-border bg-white text-[16px] font-bold text-brand-black shadow-sm transition hover:bg-gray-50 active:scale-[0.98]"
-                >
-                  Continue with Email
-                </button>
-              </>
-            )}
-
-            {view === "email" && (
-              <>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@example.com"
-                  className="h-[52px] w-full rounded-xl border border-border px-4 font-medium outline-none focus:border-brand-green focus:ring-1 focus:ring-brand-green"
-                />
-                <button
-                  onClick={handleSendCode}
-                  disabled={emailState.status === "sending-code"}
-                  className="flex h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-brand-black text-[16px] font-bold text-white shadow-lg transition-transform active:scale-[0.98] disabled:opacity-50"
-                >
-                  {emailState.status === "sending-code" ? "Sending..." : "Send Code"}
-                </button>
-                <button
-                  onClick={() => setView("options")}
-                  className="text-sm font-medium text-muted mt-2"
-                >
-                  Back
-                </button>
-              </>
-            )}
-
-            {view === "otp" && (
-              <>
-                <input
-                  type="text"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  placeholder="123456"
-                  maxLength={6}
-                  className="h-[52px] w-full rounded-xl border border-border px-4 text-center text-lg font-extrabold tracking-widest outline-none focus:border-brand-green focus:ring-1 focus:ring-brand-green"
-                />
-                <button
-                  onClick={handleVerifyOtp}
-                  disabled={emailState.status === "submitting-code"}
-                  className="flex h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-brand-green text-[16px] font-bold text-white shadow-lg transition-transform active:scale-[0.98] disabled:opacity-50"
-                >
-                  {emailState.status === "submitting-code" ? "Verifying..." : "Verify & Sign In"}
-                </button>
-                <button
-                  onClick={() => setView("email")}
-                  className="text-sm font-medium text-muted mt-2"
-                >
-                  Change Email
-                </button>
-              </>
-            )}
-
+          <div className="mt-auto pt-8">
+            <button
+              type="button"
+              onClick={login}
+              disabled={!isPrivyConfigured || !ready}
+              className="flex h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-brand-green text-[16px] font-bold text-white shadow-lg transition-transform active:scale-[0.98] disabled:opacity-50"
+            >
+              Get Started
+            </button>
             <p className="mt-4 text-center text-xs leading-relaxed text-muted">
               By continuing you agree to our Terms of Service and Privacy Policy.
             </p>

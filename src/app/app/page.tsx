@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import confetti from "canvas-confetti";
 import { usePrivy } from "@privy-io/react-auth";
+import { useSmartWallets } from "@privy-io/react-auth/smart-wallets";
 import { useAuth } from "@/lib/auth";
 import { useAppData } from "@/lib/app-data";
 
@@ -22,11 +23,12 @@ const SPOTIFY_PACKAGES = [
 
 export default function HomePage() {
   const { user } = usePrivy();
+  const { client } = useSmartWallets();
   const { email } = useAuth();
   const { rate, kycVerified, kycFirstName, kycPhone } = useAppData();
   const router = useRouter();
 
-  console.log("Smart Wallet Address:", user?.wallet?.address);
+  console.log("Smart Wallet Address:", client?.account?.address || user?.wallet?.address);
 
   const [targetEmail, setTargetEmail] = useState("");
   const [targetPassword, setTargetPassword] = useState("");
