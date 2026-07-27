@@ -4,10 +4,38 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ReactNode, useEffect } from "react";
 import { MOBILE_MAX_WIDTH, MobileShell } from "@/components/app/MobileShell";
-import { SessionProvider } from "next-auth/react";
 import { useAuth } from "@/lib/auth";
 
 import { AppDataProvider, useAppData } from "@/lib/app-data";
+import { usePrivy } from "@privy-io/react-auth";
+
+function AuthSync() {
+  const { user, ready, authenticated } = usePrivy();
+  
+  useEffect(() => {
+    if (ready && authenticated && user) {
+      const email = user.email?.address || user.google?.email;
+      const name = user.google?.name || email?.split("@")[0] || "User";
+      const smartWallet = user.wallet?.address; // Embedded wallet address
+      const ref = localStorage.getItem("zotheka_ref_code");
+      
+      if (email) {
+        fetch("/api/users/sync", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email,
+            name,
+            referrerCode: ref || undefined,
+            smartWalletAddress: smartWallet
+          })
+        }).catch(console.error);
+      }
+    }
+  }, [ready, authenticated, user]);
+  
+  return null;
+}
 
 const NAV_ITEMS = [
   { href: "/app", label: "Home", icon: HomeIcon },
@@ -91,11 +119,10 @@ function AppShell({ children }: { children: ReactNode }) {
 
 export function AppProviders({ children }: { children: ReactNode }) {
   return (
-    <SessionProvider>
-        <AppDataProvider>
-          <AppShell>{children}</AppShell>
-        </AppDataProvider>
-    </SessionProvider>
+    <AppDataProvider>
+      <AuthSync />
+      <AppShell>{children}</AppShell>
+    </AppDataProvider>
   );
 }
 

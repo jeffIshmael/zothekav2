@@ -1,13 +1,20 @@
 "use client";
 
-import { signIn } from "next-auth/react";
+import { useLoginWithOAuth, useLoginWithEmail } from "@privy-io/react-auth";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 
 export default function SignInPage() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
+  const { initOAuth } = useLoginWithOAuth();
+  const { sendCode, loginWithCode, state: emailState } = useLoginWithEmail();
+
+  const [view, setView] = useState<"options" | "email" | "otp">("options");
+  const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [error, setError] = useState("");
 
   const goToApp = () => router.replace("/app");
 
@@ -16,6 +23,37 @@ export default function SignInPage() {
       goToApp();
     }
   }, [isAuthenticated, router]);
+
+  const handleGoogle = () => {
+    initOAuth({ provider: "google" });
+  };
+
+  const handleSendCode = async () => {
+    if (!email) {
+      setError("Please enter a valid email");
+      return;
+    }
+    setError("");
+    try {
+      await sendCode({ email });
+      setView("otp");
+    } catch (e: any) {
+      setError(e?.message || "Failed to send code");
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!otp) {
+      setError("Please enter the code");
+      return;
+    }
+    setError("");
+    try {
+      await loginWithCode({ code: otp });
+    } catch (e: any) {
+      setError(e?.message || "Invalid code");
+    }
+  };
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -62,18 +100,76 @@ export default function SignInPage() {
           </p>
 
           <div className="mt-auto pt-8 flex flex-col gap-3">
-            <button
-              onClick={() => signIn("google")}
-              className="flex h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-brand-green text-[16px] font-bold text-white shadow-lg transition-transform active:scale-[0.98]"
-            >
-              Continue with Google
-            </button>
-            <button
-              onClick={() => signIn("credentials", { email: "test@zotheka.com" })}
-              className="flex h-[52px] w-full items-center justify-center gap-2 rounded-xl border border-border bg-white text-[16px] font-bold text-brand-black shadow-sm transition hover:bg-gray-50 active:scale-[0.98]"
-            >
-              Mock Login (Dev)
-            </button>
+            {error && <div className="text-red-500 text-sm font-medium text-center">{error}</div>}
+
+            {view === "options" && (
+              <>
+                <button
+                  onClick={handleGoogle}
+                  className="flex h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-brand-green text-[16px] font-bold text-white shadow-lg transition-transform active:scale-[0.98]"
+                >
+                  Continue with Google
+                </button>
+                <button
+                  onClick={() => setView("email")}
+                  className="flex h-[52px] w-full items-center justify-center gap-2 rounded-xl border border-border bg-white text-[16px] font-bold text-brand-black shadow-sm transition hover:bg-gray-50 active:scale-[0.98]"
+                >
+                  Continue with Email
+                </button>
+              </>
+            )}
+
+            {view === "email" && (
+              <>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="name@example.com"
+                  className="h-[52px] w-full rounded-xl border border-border px-4 font-medium outline-none focus:border-brand-green focus:ring-1 focus:ring-brand-green"
+                />
+                <button
+                  onClick={handleSendCode}
+                  disabled={emailState.status === "sending-code"}
+                  className="flex h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-brand-black text-[16px] font-bold text-white shadow-lg transition-transform active:scale-[0.98] disabled:opacity-50"
+                >
+                  {emailState.status === "sending-code" ? "Sending..." : "Send Code"}
+                </button>
+                <button
+                  onClick={() => setView("options")}
+                  className="text-sm font-medium text-muted mt-2"
+                >
+                  Back
+                </button>
+              </>
+            )}
+
+            {view === "otp" && (
+              <>
+                <input
+                  type="text"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  placeholder="123456"
+                  maxLength={6}
+                  className="h-[52px] w-full rounded-xl border border-border px-4 text-center text-lg font-extrabold tracking-widest outline-none focus:border-brand-green focus:ring-1 focus:ring-brand-green"
+                />
+                <button
+                  onClick={handleVerifyOtp}
+                  disabled={emailState.status === "submitting-code"}
+                  className="flex h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-brand-green text-[16px] font-bold text-white shadow-lg transition-transform active:scale-[0.98] disabled:opacity-50"
+                >
+                  {emailState.status === "submitting-code" ? "Verifying..." : "Verify & Sign In"}
+                </button>
+                <button
+                  onClick={() => setView("email")}
+                  className="text-sm font-medium text-muted mt-2"
+                >
+                  Change Email
+                </button>
+              </>
+            )}
+
             <p className="mt-4 text-center text-xs leading-relaxed text-muted">
               By continuing you agree to our Terms of Service and Privacy Policy.
             </p>

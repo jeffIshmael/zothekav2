@@ -1,15 +1,13 @@
 "use client";
 
-import { useSession } from "next-auth/react";
+import { usePrivy } from "@privy-io/react-auth";
 
 export function useAuth() {
-  const { data: session, status } = useSession();
+  const { ready, authenticated, user, logout } = usePrivy();
   return {
-    email: session?.user?.email,
-    isAuthenticated: status === "authenticated",
-    isLoading: status === "loading",
-    signOut: async () => {
-        // Handle next-auth signOut if necessary
-    }
+    email: user?.email?.address || user?.google?.email,
+    isAuthenticated: ready && authenticated,
+    isLoading: !ready,
+    signOut: logout
   };
 }

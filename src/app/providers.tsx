@@ -1,7 +1,29 @@
 "use client";
 
-import { SessionProvider } from "next-auth/react";
+import { PrivyProvider } from "@privy-io/react-auth";
+import { PRIVY_APP_ID } from "@/lib/privy-config";
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  return <SessionProvider>{children}</SessionProvider>;
+  if (!PRIVY_APP_ID) {
+    return <>{children}</>;
+  }
+  return (
+    <PrivyProvider
+      appId={PRIVY_APP_ID}
+      config={{
+        loginMethods: ["email", "google"],
+        appearance: {
+          theme: "light",
+          accentColor: "#676FFF",
+        },
+        embeddedWallets: {
+          ethereum: {
+            createOnLogin: "users-without-wallets",
+          },
+        },
+      }}
+    >
+      {children}
+    </PrivyProvider>
+  );
 }
