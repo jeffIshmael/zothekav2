@@ -1,6 +1,6 @@
 "use client";
 
-import { useSession, signIn } from "next-auth/react";
+import { usePrivy } from "@privy-io/react-auth";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -9,15 +9,15 @@ export default function InvitePage() {
   const router = useRouter();
   const batchId = params?.batchId as string;
   
-  const { data: session } = useSession();
+  const { ready, authenticated, login } = usePrivy();
   const [kycDone, setKycDone] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const [denied, setDenied] = useState(false);
 
   const handleAgree = () => {
     // We redirect to sign in, and NextAuth will bring them back to this exact page after auth
-    if (!session) {
-      signIn("google", { callbackUrl: window.location.href });
+    if (!authenticated) {
+      login();
     } else {
       setAgreed(true);
     }
