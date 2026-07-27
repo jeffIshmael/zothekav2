@@ -5,58 +5,55 @@ import Link from "next/link";
 import Image from "next/image";
 import { useAuth } from "@/lib/auth";
 
-// Dummy Data
-export type MockPurchase = {
+export type Purchase = {
   id: string;
-  productName: string;
-  amountMwk: number;
+  initiator_id: string;
+  product_name: string;
+  target_email: string;
+  total_amount_mwk: number;
+  is_peer: boolean;
+  total_peers: number;
+  joined_peers: number;
+  batch_id: string;
   status: string;
-  createdAt: string;
-  isPeer: boolean;
-  totalPeers?: number;
-  joinedPeers?: number;
-  batchId?: string;
-  origin?: string;
+  created_at: string;
+  updated_at: string;
 };
-
-export const DUMMY_PURCHASES: MockPurchase[] = [
-  {
-    id: "ord_123456",
-    productName: "Family",
-    amountMwk: 12500,
-    status: "PENDING",
-    createdAt: new Date().toISOString(),
-    isPeer: true,
-    totalPeers: 6,
-    joinedPeers: 2,
-    batchId: "mock_abc123"
-  },
-  {
-    id: "ord_654321",
-    productName: "Individual",
-    amountMwk: 3500,
-    status: "COMPLETED",
-    createdAt: new Date(Date.now() - 86400000).toISOString(),
-    isPeer: false
-  }
-];
 
 export default function PurchasesPage() {
   const { email } = useAuth();
-  const [orders, setOrders] = useState<MockPurchase[]>([]);
+  const [orders, setOrders] = useState<Purchase[]>([]);
   const [loading, setLoading] = useState(true);
   const [origin, setOrigin] = useState("");
 
   useEffect(() => {
     setOrigin(window.location.origin);
-    // Simulate API delay
-    const timer = setTimeout(() => {
-      if (email) {
-        setOrders(DUMMY_PURCHASES);
+    
+    async function fetchPurchases() {
+      if (!email) {
+        setLoading(false);
+        return;
       }
-      setLoading(false);
-    }, 800);
-    return () => clearTimeout(timer);
+      try {
+        const baseUrl = process.env.NEXT_PUBLIC_ZOTHEKA_WEB_URL?.replace(/\/$/, "") ?? "";
+        const res = await fetch(`${baseUrl}/api/purchases`, {
+          headers: {
+            "Content-Type": "application/json",
+            "X-User-Email": email
+          }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setOrders(data);
+        }
+      } catch (e) {
+        console.error("Failed to fetch purchases", e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    fetchPurchases();
   }, [email]);
 
   const copyLink = (e: React.MouseEvent, batchId: string) => {
@@ -90,7 +87,7 @@ export default function PurchasesPage() {
       ) : (
         <ul className="mt-6 space-y-4">
           {orders.map((order) => {
-            const dateStr = new Date(order.createdAt).toLocaleDateString("en-GB", {
+            const dateStr = new Date(order.created_at).toLocaleDateString("en-GB", {
               day: "numeric",
               month: "short",
               year: "numeric",
@@ -107,12 +104,12 @@ export default function PurchasesPage() {
                         <Image src="/images/spotify.webp" alt="Spotify" width={48} height={48} className="object-cover" />
                       </div>
                       <div>
-                        <p className="font-bold text-brand-black">Spotify {order.productName}</p>
+                        <p className="font-bold text-brand-black">Spotify {order.product_name}</p>
                         <p className="text-xs text-muted mt-0.5">{dateStr}</p>
                       </div>
                     </div>
                     <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${
-                      order.status === "PENDING" ? "bg-brand-yellow/10 text-brand-yellow" : "bg-brand-green/10 text-brand-green"
+                      order.status === "PENDING" || order.status === "WAITING_TO_FILL" ? "bg-brand-yellow/10 text-brand-yellow" : "bg-brand-green/10 text-brand-green"
                     }`}>
                       {order.status === "COMPLETED" ? "Paid" : "Pending"}
                     </span>
@@ -121,29 +118,29 @@ export default function PurchasesPage() {
                   <div className="mt-4 pt-4 border-t border-border flex items-end justify-between">
                     <div>
                       <p className="text-xs font-bold uppercase tracking-wider text-muted mb-1">Total Cost</p>
-                      <p className="text-sm font-bold text-brand-black">{order.amountMwk.toLocaleString()} MWK</p>
+                      <p className="text-sm font-bold text-brand-black">{order.total_amount_mwk.toLocaleString()} MWK</p>
                     </div>
 
-                    {order.isPeer && order.totalPeers && order.joinedPeers !== undefined && (
+                    {order.is_peer && order.total_peers > 0 && order.joined_peers !== undefined && (
                       <div className="text-right">
                         <p className="text-xs font-bold uppercase tracking-wider text-muted mb-1">Peers Joined</p>
                         <div className="flex items-center gap-2">
                           <div className="w-24 h-1.5 rounded-full bg-border overflow-hidden">
                             <div 
                               className="h-full bg-brand-green transition-all" 
-                              style={{ width: `${(order.joinedPeers / order.totalPeers) * 100}%` }}
+                              style={{ width: `${(order.joined_peers / order.total_peers) * 100}%` }}
                             />
                           </div>
-                          <span className="text-xs font-bold text-brand-green">{order.joinedPeers}/{order.totalPeers}</span>
+                          <span className="text-xs font-bold text-brand-green">{order.joined_peers}/{order.total_peers}</span>
                         </div>
                       </div>
                     )}
                   </div>
 
-                  {order.isPeer && order.batchId && order.joinedPeers! < order.totalPeers! && (
+                  {order.is_peer && order.batch_id && order.joined_peers < order.total_peers && (
                     <div className="mt-4 pt-3">
                       <button 
-                        onClick={(e) => copyLink(e, order.batchId!)}
+                        onClick={(e) => copyLink(e, order.batch_id!)}
                         className="w-full flex items-center justify-center gap-2 rounded-xl bg-brand-green/10 py-2.5 text-sm font-bold text-brand-green transition hover:bg-brand-green/20"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

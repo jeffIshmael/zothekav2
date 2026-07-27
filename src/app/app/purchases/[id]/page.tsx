@@ -5,23 +5,17 @@ import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { useAuth } from "@/lib/auth";
 import { ChevronLeft } from "lucide-react";
-import { DUMMY_PURCHASES, MockPurchase } from "../page";
+import type { Purchase } from "../page";
 
-// Extend with mock details for peers
-type MockPeer = {
+type Participant = {
   email: string;
-  amountMwk: number;
-  paidAt: string;
+  amount_mwk: number;
+  paid_at: string | null;
+  status: string;
 };
 
-const DUMMY_DETAILS: Record<string, MockPeer[]> = {
-  "ord_123456": [
-    { email: "ini***@gmail.com", amountMwk: 2083, paidAt: new Date(Date.now() - 3600000).toISOString() },
-    { email: "ali***@gmail.com", amountMwk: 2083, paidAt: new Date(Date.now() - 1800000).toISOString() }
-  ],
-  "ord_654321": [
-    { email: "ini***@gmail.com", amountMwk: 3500, paidAt: new Date(Date.now() - 86400000).toISOString() }
-  ]
+type PurchaseDetail = Purchase & {
+  participants: Participant[];
 };
 
 export default function PurchaseDetailsPage() {
@@ -31,27 +25,45 @@ export default function PurchaseDetailsPage() {
   
   const id = params?.id as string;
   
-  const [order, setOrder] = useState<MockPurchase | null>(null);
-  const [peers, setPeers] = useState<MockPeer[]>([]);
+  const [order, setOrder] = useState<PurchaseDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [origin, setOrigin] = useState("");
 
   useEffect(() => {
     setOrigin(window.location.origin);
-    const timer = setTimeout(() => {
-      const found = DUMMY_PURCHASES.find(p => p.id === id);
-      if (found) {
-        setOrder(found);
-        setPeers(DUMMY_DETAILS[id] || []);
+    
+    async function fetchPurchase() {
+      if (!email) {
+        setLoading(false);
+        return;
       }
-      setLoading(false);
-    }, 600);
-    return () => clearTimeout(timer);
-  }, [id]);
+      try {
+        const baseUrl = process.env.NEXT_PUBLIC_ZOTHEKA_WEB_URL?.replace(/\/$/, "") ?? "";
+        const res = await fetch(`${baseUrl}/api/purchases/${id}`, {
+          headers: {
+            "Content-Type": "application/json",
+            "X-User-Email": email
+          }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.id) {
+            setOrder(data);
+          }
+        }
+      } catch (e) {
+        console.error("Failed to fetch purchase", e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    fetchPurchase();
+  }, [id, email]);
 
   const copyLink = () => {
-    if (!order?.batchId) return;
-    const inviteLink = `${origin}/app/invite/${order.batchId}`;
+    if (!order?.batch_id) return;
+    const inviteLink = `${origin}/app/invite/${order.batch_id}`;
     navigator.clipboard.writeText(inviteLink);
     alert("Invite link copied to clipboard!");
   };
@@ -75,7 +87,7 @@ export default function PurchaseDetailsPage() {
     );
   }
 
-  const dateStr = new Date(order.createdAt).toLocaleDateString("en-GB", {
+  const dateStr = new Date(order.created_at).toLocaleDateString("en-GB", {
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -86,7 +98,7 @@ export default function PurchaseDetailsPage() {
   let detailedStatus = "Pending Payment";
   if (order.status === "COMPLETED") {
     detailedStatus = "Paid";
-  } else if (order.isPeer && order.joinedPeers !== undefined && order.totalPeers !== undefined && order.joinedPeers < order.totalPeers) {
+  } else if (order.is_peer && order.joined_peers !== undefined && order.total_peers !== undefined && order.joined_peers < order.total_peers) {
     detailedStatus = "Waiting to Fill";
   }
 
@@ -104,7 +116,7 @@ export default function PurchaseDetailsPage() {
           <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-black mb-4 shadow-md">
             <Image src="/images/spotify.webp" alt="Spotify" width={80} height={80} className="object-cover" />
           </div>
-          <h1 className="text-2xl font-extrabold text-brand-black">Spotify {order.productName}</h1>
+          <h1 className="text-2xl font-extrabold text-brand-black">Spotify {order.product_name}</h1>
           <p className="mt-1 font-mono text-sm text-muted">{order.id}</p>
           
           <div className="mt-6 flex flex-col items-center">
@@ -119,7 +131,7 @@ export default function PurchaseDetailsPage() {
         <div className="mt-8 space-y-4">
           <div className="flex items-center justify-between rounded-xl bg-background p-4 border border-border">
             <span className="text-sm font-semibold text-muted">Total Amount</span>
-            <span className="font-bold text-brand-black">{order.amountMwk.toLocaleString()} MWK</span>
+            <span className="font-bold text-brand-black">{order.total_amount_mwk.toLocaleString()} MWK</span>
           </div>
           <div className="flex items-center justify-between rounded-xl bg-background p-4 border border-border">
             <span className="text-sm font-semibold text-muted">Date Created</span>
@@ -127,16 +139,16 @@ export default function PurchaseDetailsPage() {
           </div>
         </div>
 
-        {order.isPeer && (
+        {order.is_peer && (
           <div className="mt-8 border-t border-border pt-6">
-            <h2 className="text-lg font-bold text-brand-black mb-4">Peers ({order.joinedPeers}/{order.totalPeers})</h2>
+            <h2 className="text-lg font-bold text-brand-black mb-4">Peers ({order.joined_peers}/{order.total_peers})</h2>
             
             <div className="space-y-3">
-              {peers.map((peer, idx) => {
-                const paidTime = new Date(peer.paidAt).toLocaleTimeString("en-GB", {
+              {order.participants?.map((peer, idx) => {
+                const paidTime = peer.paid_at ? new Date(peer.paid_at).toLocaleTimeString("en-GB", {
                   hour: "2-digit",
                   minute: "2-digit"
-                });
+                }) : "N/A";
                 return (
                   <div key={idx} className="flex items-center justify-between rounded-xl bg-background p-4 border border-border">
                     <div className="flex items-center gap-3">
@@ -144,17 +156,17 @@ export default function PurchaseDetailsPage() {
                         {idx + 1}
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-brand-black">{peer.email}</p>
+                        <p className="text-sm font-bold text-brand-black">{peer.email || "Anonymous"}</p>
                         <p className="text-[10px] font-semibold text-muted mt-0.5">Paid at {paidTime}</p>
                       </div>
                     </div>
-                    <span className="font-bold text-brand-green">{peer.amountMwk.toLocaleString()} MWK</span>
+                    <span className="font-bold text-brand-green">{peer.amount_mwk.toLocaleString()} MWK</span>
                   </div>
                 );
               })}
             </div>
 
-            {order.joinedPeers! < order.totalPeers! && (
+            {order.joined_peers < order.total_peers && (
               <button 
                 onClick={copyLink}
                 className="mt-6 w-full flex items-center justify-center gap-2 rounded-xl bg-brand-green px-4 py-3 text-sm font-bold text-white transition hover:bg-brand-green-dark shadow-sm"
