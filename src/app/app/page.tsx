@@ -75,9 +75,72 @@ export default function HomePage() {
     setPaymentPrompting(true);
 
     try {
-      // Simulate waiting for user to enter Mobile Money PIN
-      await new Promise((resolve) => setTimeout(resolve, 3500));
-      
+      const baseUrl = process.env.NEXT_PUBLIC_ZOTHEKA_WEB_URL?.replace(/\/$/, "") ?? "http://localhost:5000";
+      const payload = {
+        productName: selectedPkg.name,
+        targetEmail,
+        targetPassword,
+        amountMwk: totalMwk,
+        isPeer: !isSolo,
+        totalPeers: members
+      };
+
+      const res = await fetch(`${baseUrl}/api/purchases`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-User-Email": email || ""
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to initiate purchase.");
+      }
+
+      const data = await res.json();
+      const purchaseId = data.purchaseId;
+      if (!isSolo) {
+        setGeneratedBatchId(data.batchId);
+      }
+
+      // Poll for payment success
+      const checkStatus = async () => {
+        const pollRes = await fetch(`${baseUrl}/api/purchases/${purchaseId}`, {
+          headers: {
+            "X-User-Email": email || ""
+          }
+        });
+        if (pollRes.ok) {
+          const pollData = await pollRes.json();
+          // Find our participant record
+          const myParticipant = pollData.participants?.find((p: any) => p.email === email);
+          if (myParticipant) {
+            if (myParticipant.status === "PAID") {
+              return true; // Success
+            }
+            if (myParticipant.status === "FAILED") {
+              throw new Error("Payment failed or was cancelled.");
+            }
+          }
+        }
+        return false;
+      };
+
+      let attempts = 0;
+      let success = false;
+      while (attempts < 20 && !success) { // Poll for ~1 minute
+        success = await checkStatus();
+        if (success) break;
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        attempts++;
+      }
+
+      if (!success) {
+        throw new Error("Payment timeout. Please check your transaction history.");
+      }
+
       setPaymentPrompting(false);
       
       // Fire confetti
@@ -86,11 +149,6 @@ export default function HomePage() {
         spread: 70,
         origin: { y: 0.6 }
       });
-
-      if (!isSolo) {
-        const batchId = Math.random().toString(36).substring(7);
-        setGeneratedBatchId(batchId);
-      }
 
       // Always show success modal now
       setShowSuccessModal(true);

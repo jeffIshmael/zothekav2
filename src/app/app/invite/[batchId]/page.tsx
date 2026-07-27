@@ -9,7 +9,7 @@ export default function InvitePage() {
   const router = useRouter();
   const batchId = params?.batchId as string;
   
-  const { ready, authenticated, login } = usePrivy();
+  const { ready, authenticated, login, user } = usePrivy();
   const [kycDone, setKycDone] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const [denied, setDenied] = useState(false);
@@ -104,13 +104,75 @@ export default function InvitePage() {
               <span className="font-bold text-brand-green text-xl">3,000 MWK</span>
             </div>
             <button 
-              onClick={() => {
-                alert("Payment simulated successfully!");
-                router.push("/app/success?solo=true"); // Reusing success page for copayer
+              onClick={async () => {
+                const baseUrl = process.env.NEXT_PUBLIC_ZOTHEKA_WEB_URL?.replace(/\/$/, "") ?? "http://localhost:5000";
+                
+                try {
+                  const res = await fetch(`${baseUrl}/api/invites/${batchId}/join`, {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      "X-User-Email": user?.email?.address || "" // or however we get the email
+                    },
+                    body: JSON.stringify({})
+                  });
+                  
+                  if (!res.ok) {
+                    const err = await res.json();
+                    alert(err.error || "Failed to join");
+                    return;
+                  }
+                  
+                  // Poll for payment success
+                  const checkStatus = async () => {
+                    const pollRes = await fetch(`${baseUrl}/api/purchases`, {
+                      headers: {
+                        "X-User-Email": user?.email?.address || ""
+                      }
+                    });
+                    if (pollRes.ok) {
+                      const purchases = await pollRes.json();
+                      // Find the purchase that matches this batchId
+                      const purchase = purchases.find((p: any) => p.batch_id === batchId);
+                      if (purchase) {
+                        // Fetch details
+                        const detailRes = await fetch(`${baseUrl}/api/purchases/${purchase.id}`, {
+                          headers: { "X-User-Email": user?.email?.address || "" }
+                        });
+                        if (detailRes.ok) {
+                          const detailData = await detailRes.json();
+                          const myParticipant = detailData.participants?.find((p: any) => p.email === user?.email?.address);
+                          if (myParticipant) {
+                            if (myParticipant.status === "PAID") return true;
+                            if (myParticipant.status === "FAILED") throw new Error("Payment failed");
+                          }
+                        }
+                      }
+                    }
+                    return false;
+                  };
+
+                  let attempts = 0;
+                  let success = false;
+                  while (attempts < 20 && !success) {
+                    success = await checkStatus();
+                    if (success) break;
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+                    attempts++;
+                  }
+
+                  if (!success) {
+                    throw new Error("Payment timeout.");
+                  }
+
+                  router.push("/app/success?solo=true"); 
+                } catch (err: any) {
+                  alert(err.message || "An error occurred");
+                }
               }}
               className="w-full py-4 rounded-xl bg-brand-green text-white font-bold text-lg hover:bg-brand-green-dark transition"
             >
-              Simulate Payment
+              Pay via M-PESA
             </button>
           </>
         )}
