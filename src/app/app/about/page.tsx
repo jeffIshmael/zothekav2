@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft, ArrowDownToLine, Globe2, ArrowUpFromLine, CreditCard, Banknote } from "lucide-react";
+import { ArrowLeft, LayoutGrid, Users, Link2, Music2 } from "lucide-react";
 
 export default function AboutPage() {
   return (
@@ -35,11 +35,11 @@ export default function AboutPage() {
 
           {/* Mission */}
           <section className="pt-6">
-            <h2 className="mb-3 text-lg font-bold text-brand-black">Your Global Financial Passport</h2>
+            <h2 className="mb-3 text-lg font-bold text-brand-black">Spotify, split fairly</h2>
             <p className="leading-relaxed text-muted">
-              At Zotheka, our mission is to make global finance completely accessible and effortless for
-              everyday Malawians. We act as your secure bridge, connecting your local mobile money directly
-              to the wider global economy without the usual friction or delays.
+              At Zotheka, our mission is simple: help Malawians pay for Spotify Premium using the
+              mobile money they already have, and make splitting a Duo or Family plan with other
+              people effortless.
             </p>
           </section>
 
@@ -52,75 +52,53 @@ export default function AboutPage() {
             <div className="divide-y divide-border">
               <div className="flex gap-3 pb-5">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-green/10 text-brand-green">
-                  <ArrowDownToLine className="h-5 w-5" />
+                  <LayoutGrid className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-brand-black mb-1">Fund Your Account Seamlessly</h3>
+                  <h3 className="font-bold text-brand-black mb-1">Choose Your Package</h3>
                   <p className="leading-relaxed text-muted">
-                    Fund your Zotheka wallet with USD by depositing directly from your local MWK mobile
-                    money (Airtel or TNM Mpamba) — nearly instant, no banking queues.
+                    Pick Solo, Student, Duo, or Family. Duo and Family plans can be paid in full
+                    by you, or split with peers.
                   </p>
                 </div>
               </div>
 
               <div className="flex gap-3 py-5">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-green/10 text-brand-green">
-                  <Globe2 className="h-5 w-5" />
+                  <Users className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-brand-black mb-1">Access Global Services</h3>
+                  <h3 className="font-bold text-brand-black mb-1">Split the Cost Automatically</h3>
                   <p className="leading-relaxed text-muted">
-                    Use your wallet balance to instantly purchase global gift cards, unlocking payment for
-                    international apps, services, and online shopping.
+                    Choose how many people are sharing a Duo or Family package and Zotheka divides
+                    the cost for you. Pay your own share via mobile money — nothing more.
                   </p>
                 </div>
               </div>
 
               <div className="flex gap-3 py-5">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-green/10 text-brand-green">
-                  <ArrowUpFromLine className="h-5 w-5" />
+                  <Link2 className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-brand-black mb-1">Withdraw Locally on Demand</h3>
+                  <h3 className="font-bold text-brand-black mb-1">Share a Link With Your Peers</h3>
                   <p className="leading-relaxed text-muted">
-                    Cash out your USD balance straight back to your MWK mobile money wallet within seconds,
-                    any time you need it.
+                    Once you've paid your share, get a link to send to the rest of your group.
+                    Each peer opens it, pays their own part, and joins the same plan.
                   </p>
                 </div>
               </div>
 
               <div className="flex gap-3 pt-5">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-black/5 text-brand-black/60">
-                  <CreditCard className="h-5 w-5" />
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-green/10 text-brand-green">
+                  <Music2 className="h-5 w-5" />
                 </div>
                 <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-bold text-brand-black">Get a Virtual Card</h3>
-                    <span className="rounded-full bg-brand-black px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white">
-                      Coming Soon
-                    </span>
-                  </div>
+                  <h3 className="font-bold text-brand-black mb-1">Get Added to the Plan</h3>
                   <p className="leading-relaxed text-muted">
-                    Generate your own virtual debit card, top it up from your balance, and pay for global
-                    subscriptions securely anywhere online.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex gap-3 pt-5">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-black/5 text-brand-black/60">
-                  <Banknote className="h-5 w-5" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-bold text-brand-black">Deposit USD & EUR</h3>
-                    <span className="rounded-full bg-brand-black px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white">
-                      Coming Soon
-                    </span>
-                  </div>
-                  <p className="leading-relaxed text-muted">
-                    Add foreign currencies (USD & EUR) directly into your Zotheka wallet, expanding your
-                    options for international funds.
+                    After paying their share, each peer submits their own Spotify account email.
+                    Zotheka adds it to the plan — everyone keeps their own account, streaming
+                    under one shared package.
                   </p>
                 </div>
               </div>

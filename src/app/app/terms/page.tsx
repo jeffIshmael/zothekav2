@@ -10,19 +10,23 @@ const SECTIONS = [
   },
   {
     title: "Services Provided",
-    body: "Zotheka provides a seamless digital wallet service, enabling you to fund your account with USD and withdraw back to your local currency using local mobile money providers in Malawi (Airtel and TNM Mpamba), powered securely by our partners at ElementPay.",
+    body: "Zotheka lets you pay for Spotify Premium packages (Solo, Student, Duo, and Family) using Malawian Kwacha via local mobile money providers (Airtel Money and TNM Mpamba). For Duo and Family packages, Zotheka lets you split the cost with other people and add their Spotify accounts to the plan once each person has paid their share.",
   },
   {
     title: "Account & KYC Registration",
-    body: "To use Zotheka's financial services, you must complete our Know Your Customer (KYC) verification process. You agree to provide accurate, current, and complete information, including a valid phone number and government-issued ID.",
+    body: "To use Zotheka's services, you must complete our Know Your Customer (KYC) verification process. You agree to provide accurate, current, and complete information, including a valid phone number and government-issued ID.",
+  },
+  {
+    title: "Splitting a Package",
+    body: "If you start a Duo or Family package and choose to split it, you agree that the cost will be divided among the number of people you select. Each peer you invite is responsible for paying their own share and submitting a valid Spotify account email before they can be added to the plan. Zotheka is not responsible for delays caused by peers who have not yet paid their share.",
   },
   {
     title: "Transactions & Fees",
-    body: "Exchange rates are provided dynamically by our partners at ElementPay and are subject to change without notice. A minimum transaction amount may apply to funding and withdrawals. Standard processing fees associated with your mobile money networks are independent of Zotheka.",
+    body: "Package prices are set in Malawian Kwacha and are subject to change without notice. A minimum transaction amount may apply. Standard processing fees charged by your mobile money network are independent of Zotheka.",
   },
   {
     title: "User Conduct",
-    body: "You agree not to use the service for any unlawful activities, money laundering, or fraud. We reserve the right to suspend or terminate accounts suspected of violating these terms.",
+    body: "You agree not to use the service for any unlawful activities, money laundering, or fraud, and not to submit a Spotify account email that does not belong to you. We reserve the right to suspend or terminate accounts suspected of violating these terms.",
   },
 ];
 
@@ -45,7 +49,7 @@ export default function TermsPage() {
             <FileText className="h-5 w-5" />
           </div>
           <p className="text-xs font-medium leading-relaxed text-muted">
-            The rules for using your Zotheka wallet, in five short sections.
+            The rules for using Zotheka to pay for and split Spotify, in six short sections.
           </p>
         </div>
 

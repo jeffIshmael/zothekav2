@@ -6,7 +6,7 @@ import { LandingNav } from "@/components/landing/LandingNav";
 export const metadata = {
   title: "About Zotheka",
   description:
-    "Zotheka helps Malawians buy global services with Kwacha and receive USD from platforms like Fiverr and Upwork, then withdraw to mobile money.",
+    "Zotheka helps Malawians pay for Spotify Premium with Kwacha on mobile money, and split Duo and Family plans with peers.",
 };
 
 export default function AboutPage() {
@@ -22,11 +22,11 @@ export default function AboutPage() {
         <div className="relative mx-auto max-w-3xl px-4 py-20 sm:px-6 sm:py-28">
           <p className="text-xs font-bold uppercase tracking-widest text-brand-green">About</p>
           <h1 className="mt-4 text-4xl font-extrabold tracking-tight sm:text-5xl">
-            Two ways Zotheka moves money for Malawi
+            Spotify Premium, paid and split in Kwacha
           </h1>
           <p className="mt-6 text-lg leading-relaxed text-white/60">
-            Zotheka connects Malawian Kwacha and US dollars to the global digital economy, whether
-            you are paying for Netflix with mobile money or cashing out a Fiverr payout to Kwacha.
+            Zotheka lets you pay for Spotify with mobile money, and split Duo or Family plans
+            with the people you already share subscriptions with.
           </p>
         </div>
       </section>

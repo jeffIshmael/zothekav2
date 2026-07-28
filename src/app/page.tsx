@@ -12,11 +12,6 @@ export default function LandingPage() {
 
       {/* ─── Hero ─── */}
       <section className="relative overflow-hidden bg-[#0A0A0A]">
-        {/*
-          Signature element: horizontal flag-stripe atmosphere.
-          Three bands (black already is bg), red, green — ultra-low opacity,
-          heavily blurred — evoking the Malawi flag without being literal.
-        */}
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0"
@@ -33,7 +28,6 @@ export default function LandingPage() {
             `,
           }}
         />
-        {/* Rising-sun arc echo */}
         <div
           aria-hidden
           className="pointer-events-none absolute -top-32 left-1/2 -translate-x-1/2"
@@ -51,50 +45,27 @@ export default function LandingPage() {
         />
 
         <div className="relative mx-auto max-w-6xl px-4 py-24 sm:px-6 sm:py-36">
-          {/* Eyebrow */}
           <p className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-white/70">
             🇲🇼 Built for Malawi
           </p>
 
           <div className="max-w-4xl">
             <h1 className="text-balance text-5xl font-extrabold leading-[1.05] tracking-tighter sm:text-6xl lg:text-7xl">
-              Pay for Netflix, Spotify
+              Spotify Premium,
               <br />
-              <span className="text-brand-green">&amp; more</span>
-              <br />
-              with your mobile money.
+              <span className="text-brand-green">split with your people.</span>
             </h1>
 
             <p className="mt-8 max-w-2xl text-lg leading-relaxed text-white/60">
-              Zotheka does two things for Malawi: buy global services like Netflix and Spotify
-              using Malawian Kwacha on mobile money, and receive US dollars from platforms like
-              Fiverr or Upwork into your wallet, then convert to Kwacha when you need it.
+              Pick a package, choose to split it with peers, and pay only your share in Kwacha
+              on mobile money. Once you&apos;ve paid, you get a link to send around — everyone
+              who joins pays their part and adds their own Spotify account.
             </p>
           </div>
 
-          {/* Live rate strip */}
-          {/* <div className="mt-10 inline-flex items-center gap-6 rounded-2xl border border-white/8 bg-white/4 px-5 py-3.5 backdrop-blur-sm">
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 animate-pulse rounded-full bg-brand-green" />
-              <span className="text-xs font-semibold uppercase tracking-widest text-white/40">Live rate</span>
-            </div>
-            <div className="h-4 w-px bg-white/10" />
-            <p className="font-extrabold text-white tracking-tight">
-              1 USD <span className="text-white/40 font-normal mx-1">≈</span> 1,734 MWK
-            </p>
-            <div className="hidden sm:flex items-center gap-3">
-              <div className="h-4 w-px bg-white/10" />
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs text-white/30">vs parallel</span>
-                <span className="text-xs font-bold text-brand-red">4,000+ MWK</span>
-              </div>
-            </div>
-          </div> */}
-
-          {/* Brand pills */}
           <div className="mt-8 flex flex-wrap items-center gap-2 mt-6">
-            <span className="text-xs text-white/30 mr-1">Works with</span>
-            {["🎬 Netflix", "🎵 Spotify", "🎮 Google Play", "🛒 Amazon", "🎁 iTunes"].map((s) => (
+            <span className="text-xs text-white/30 mr-1">Packages</span>
+            {["Solo", "Student", "Duo · 2 accounts", "Family · 6 accounts"].map((s) => (
               <span
                 key={s}
                 className="rounded-full border border-white/10 bg-white/5 px-3.5 py-1.5 text-xs font-semibold text-white/70"
@@ -104,7 +75,6 @@ export default function LandingPage() {
             ))}
           </div>
 
-          {/* CTAs */}
           <div className="mt-10 flex flex-wrap gap-3">
             <a
               href="#waitlist"
@@ -112,8 +82,8 @@ export default function LandingPage() {
             >
               Join Waitlist
             </a>
-            <a
-              href="#how-it-works"
+
+            <a href="#how-it-works"
               className="rounded-full border border-white/12 px-7 py-3.5 text-sm font-bold text-white/70 transition hover:border-white/25 hover:text-white"
             >
               How it works
@@ -127,12 +97,11 @@ export default function LandingPage() {
         <div className="mx-auto max-w-6xl px-4 py-24 sm:px-6">
           <p className="text-xs font-bold uppercase tracking-widest text-brand-red">The problem</p>
           <h2 className="mt-4 max-w-2xl text-3xl font-extrabold tracking-tight sm:text-4xl">
-            Malawi is online, but global payments aren&apos;t
+            Splitting a plan shouldn&apos;t mean chasing people every month
           </h2>
           <p className="mt-4 max-w-2xl text-base leading-relaxed text-white/50">
-            Millions of Malawians use mobile money every day, but paying for Netflix with Kwacha
-            or receiving a Fiverr payout in USD still means foreign cards, forex queues, and weeks
-            of waiting.
+            Duo and Family plans are cheaper per person, but only if someone fronts the cost,
+            collects everyone&apos;s share, and keeps track of who&apos;s actually paid.
           </p>
 
           <div className="mt-12 grid gap-4 sm:grid-cols-2">
@@ -148,29 +117,32 @@ export default function LandingPage() {
             ))}
           </div>
 
-          {/* Rate gap callout */}
-          <div className="mt-8 overflow-hidden rounded-2xl border border-brand-red/20 bg-brand-red/8">
+          {/* Split example callout */}
+          <div className="mt-8 overflow-hidden rounded-2xl border border-brand-green/20 bg-brand-green/8">
             <div className="px-6 py-5 sm:px-8 sm:py-6">
-              <p className="text-xs font-bold uppercase tracking-widest text-brand-red">The rate gap</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-brand-green">
+                How the split works
+              </p>
               <div className="mt-5 flex flex-wrap gap-10">
                 <div>
-                  <p className="text-3xl font-extrabold tracking-tight">~MK 1,700</p>
-                  <p className="mt-1 text-xs text-white/40">Official USD rate</p>
+                  <p className="text-3xl font-extrabold tracking-tight">Family · 6 accounts</p>
+                  <p className="mt-1 text-xs text-white/40">One package, divided automatically</p>
                 </div>
                 <div className="flex items-start gap-3">
-                  <div className="mt-2 text-white/20">vs</div>
+                  <div className="mt-2 text-white/20">÷</div>
                   <div>
-                    <p className="text-3xl font-extrabold tracking-tight text-brand-red">~MK 4,000+</p>
-                    <p className="mt-1 text-xs text-white/40">Parallel market (when available)</p>
+                    <p className="text-3xl font-extrabold tracking-tight text-brand-green">
+                      Up to 6 people
+                    </p>
+                    <p className="mt-1 text-xs text-white/40">Each pays their own share, no more</p>
                   </div>
                 </div>
               </div>
               <p className="mt-5 max-w-xl text-sm leading-relaxed text-white/40">
-                When dollars are scarce, everyday digital purchases (a Netflix subscription, a
-                Steam game, an Upwork payout) become a multi-week ordeal.
+                Start the plan, pay your share, and get a link. Send it to your peers — as each
+                person pays and submits their Spotify email, they&apos;re added to the plan.
               </p>
             </div>
-            {/* flag-stripe bottom accent */}
             <div className="flex h-1.5">
               <div className="flex-1 bg-[#0A0A0A]" />
               <div className="flex-1 bg-brand-red/60" />
@@ -188,8 +160,8 @@ export default function LandingPage() {
             Malawians talking about the problem
           </h2>
           <p className="mt-4 max-w-xl text-base leading-relaxed text-white/50">
-            Real discussions from r/Malawi: forex shortages, bank delays, and the struggle to pay
-            for or receive money from abroad. We&apos;re not inventing the problem.
+            Real discussions from r/Malawi on the cost of subscriptions and the hassle of
+            splitting them informally. We&apos;re not inventing the problem.
           </p>
           <div className="mt-12">
             <RedditAttestations />
@@ -202,11 +174,11 @@ export default function LandingPage() {
         <div className="mx-auto max-w-6xl px-4 py-24 sm:px-6">
           <p className="text-xs font-bold uppercase tracking-widest text-brand-green">How it works</p>
           <h2 className="mt-4 max-w-2xl text-3xl font-extrabold tracking-tight sm:text-4xl">
-            Two ways to use Zotheka
+            Start a plan, or join one
           </h2>
           <p className="mt-4 max-w-xl text-base leading-relaxed text-white/50">
-            Whether you are subscribing to Netflix or getting paid on Fiverr, Zotheka bridges
-            Malawian Kwacha and US dollars to the services you already use.
+            Whether you&apos;re starting the plan or joining someone else&apos;s link, you always
+            pay just your own share in Kwacha via mobile money.
           </p>
 
           <div className="mt-12 grid gap-6 lg:grid-cols-2">
@@ -277,8 +249,8 @@ export default function LandingPage() {
                   Ready to see it work?
                 </h3>
                 <p className="mt-2 text-sm leading-relaxed text-white/75">
-                  Try both flows in our web demo: buy a Netflix gift card with MWK mobile money,
-                  simulate a Fiverr USD payout, or withdraw to Kwacha.
+                  Try it in our web demo: pick a package, choose to split it, pay your share, and
+                  see the link your peers would use to join.
                 </p>
               </div>
               <a
@@ -288,7 +260,6 @@ export default function LandingPage() {
                 Join Waitlist →
               </a>
             </div>
-            {/* flag stripe footer accent */}
             <div className="flex h-1">
               <div className="flex-1 bg-black/30" />
               <div className="flex-1 bg-brand-red/50" />
@@ -296,10 +267,10 @@ export default function LandingPage() {
             </div>
           </div>
         </div>
-      </section>
+      </section >
 
       <LandingFooter />
       <WaitlistModal />
-    </div>
+    </div >
   );
 }
