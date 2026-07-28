@@ -13,7 +13,7 @@ export default function InvitePage() {
 
     const { ready, authenticated, login } = usePrivy();
     const { email } = useAuth();
-    const { kycVerified, kycPhone } = useAppData();
+    const { kycVerified, kycPhone, refresh } = useAppData();
 
     const [denied, setDenied] = useState(false);
     const [targetEmail, setTargetEmail] = useState("");
@@ -32,6 +32,13 @@ export default function InvitePage() {
         setToastType(type);
         setTimeout(() => setShowToast(""), 3000);
     };
+
+    // Refresh KYC data on mount in case user just returned from /kyc
+    useEffect(() => {
+        if (authenticated) {
+            refresh();
+        }
+    }, [authenticated, refresh]);
 
     useEffect(() => {
         if (!batchId) return;
@@ -266,42 +273,52 @@ export default function InvitePage() {
                     />
                 </div>
 
-                {kycVerified === false ? (
-                    <button
-                        onClick={() => router.push(`/app/kyc?returnUrl=/app/invite/${batchId}`)}
-                        className="w-full py-4 rounded-xl bg-brand-black text-white font-bold text-lg hover:bg-gray-800 transition shadow-card"
-                    >
-                        Verify Account to Pay
-                    </button>
-                ) : (
-                    <>
+                {kycVerified === false && (
+                    <div className="mb-6 flex items-center justify-between rounded-xl border border-brand-yellow/20 bg-brand-yellow/10 p-4">
+                        <div className="flex flex-col text-left">
+                            <span className="text-[15px] font-semibold text-brand-black">Identity Verification</span>
+                            <span className="mt-1 w-fit rounded-full bg-brand-yellow/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-yellow-600">
+                                Required to pay
+                            </span>
+                        </div>
+                        <button
+                            onClick={() => router.push(`/app/kyc?returnUrl=/app/invite/${batchId}`)}
+                            className="rounded-full bg-brand-yellow px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-brand-yellow/90"
+                        >
+                            Verify Now
+                        </button>
+                    </div>
+                )}
+
+                <>
+                    {kycVerified !== false && (
                         <p className="text-center text-[13px] text-muted font-medium mb-3">
                             Payment prompt will be sent to <span className="font-bold text-brand-black">{kycPhone || "your registered number"}</span>
                         </p>
-                        <button
-                            onClick={handleJoinAndPay}
-                            disabled={joining || !targetEmail}
-                            className="w-full py-4 rounded-xl bg-brand-green text-white font-bold text-lg hover:bg-brand-green-dark transition shadow-card disabled:opacity-50 flex items-center justify-center gap-2"
-                        >
-                        {joining ? (
-                            promptSent ? (
-                                <>
-                                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                                    Prompt sent. Waiting for payment...
-                                </>
-                            ) : (
-                                <>
-                                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                                    Processing...
-                                </>
-                            )
+                    )}
+                    <button
+                        onClick={handleJoinAndPay}
+                        disabled={kycVerified === false || joining || !targetEmail}
+                        className={`w-full py-4 rounded-xl text-white font-bold text-lg transition shadow-card flex items-center justify-center gap-2 ${kycVerified === false ? "bg-gray-300 opacity-60 cursor-not-allowed" : "bg-brand-green hover:bg-brand-green-dark"}`}
+                    >
+                    {joining ? (
+                        promptSent ? (
+                            <>
+                                <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                                Prompt sent. Waiting for payment...
+                            </>
                         ) : (
-                            `Secure Pay ${Math.ceil(inviteDetails?.splitAmountMwk || 0).toLocaleString()} MWK`
-                        )}
-                    </button>
-                    <p className="text-center text-[10px] text-muted mt-4">v2.1.4</p>
-                    </>
-                )}
+                            <>
+                                <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                                Processing...
+                            </>
+                        )
+                    ) : (
+                        `Secure Pay ${Math.ceil(inviteDetails?.splitAmountMwk || 0).toLocaleString()} MWK`
+                    )}
+                </button>
+                <p className="text-center text-[10px] text-muted mt-4">v2.1.4</p>
+                </>
             </div>
 
             {showToast && (
