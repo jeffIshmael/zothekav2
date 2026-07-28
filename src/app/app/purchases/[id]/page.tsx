@@ -151,16 +151,20 @@ export default function PurchaseDetailsPage() {
                 }) : "N/A";
                 return (
                   <div key={idx} className="flex items-center justify-between rounded-xl bg-background p-4 border border-border">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-green/10 text-brand-green text-sm font-bold">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="flex flex-shrink-0 h-8 w-8 items-center justify-center rounded-full bg-brand-green/10 text-brand-green text-sm font-bold">
                         {idx + 1}
                       </div>
-                      <div>
-                        <p className="text-sm font-bold text-brand-black">{peer.email || "Anonymous"}</p>
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-brand-black truncate" title={peer.email || "Anonymous"}>
+                          {peer.email || "Anonymous"}
+                        </p>
                         <p className="text-[10px] font-semibold text-muted mt-0.5">Paid at {paidTime}</p>
                       </div>
                     </div>
-                    <span className="font-bold text-brand-green">{peer.amount_mwk.toLocaleString()} MWK</span>
+                    <span className="font-bold text-brand-green ml-3 flex-shrink-0 whitespace-nowrap">
+                      {peer.amount_mwk.toLocaleString()} MWK
+                    </span>
                   </div>
                 );
               })}

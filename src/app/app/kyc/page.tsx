@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import { IdCard, Book, Car, ArrowLeft, ChevronDown, Camera, FileImage, Check } from "lucide-react";
 import { MOBILE_MAX_WIDTH } from "@/components/app/MobileShell";
@@ -33,7 +33,9 @@ const NETWORKS = [
 
 export default function KycPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { email } = useAuth();
+  const returnUrl = searchParams.get("returnUrl");
   
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -118,9 +120,13 @@ export default function KycPage() {
         email
       };
 
-      const res = await fetch("/api/kyc", {
+      const baseUrl = process.env.NEXT_PUBLIC_ZOTHEKA_WEB_URL?.replace(/\/$/, "") ?? "http://localhost:5000";
+      const res = await fetch(`${baseUrl}/api/kyc`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "X-User-Email": email
+        },
         body: JSON.stringify(payload),
       });
 
@@ -184,11 +190,15 @@ export default function KycPage() {
         >
           <button 
             onClick={() => {
-              window.location.href = "/app/account";
+              if (returnUrl) {
+                router.push(returnUrl);
+              } else {
+                window.location.href = "/app/account";
+              }
             }}
             className="w-full rounded-[1.25rem] bg-brand-black text-surface px-8 py-5 text-[17px] font-extrabold shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all"
           >
-            Home
+            {returnUrl ? "OK" : "Home"}
           </button>
         </div>
       </div>

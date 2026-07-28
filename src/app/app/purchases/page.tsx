@@ -25,6 +25,7 @@ export default function PurchasesPage() {
   const [orders, setOrders] = useState<Purchase[]>([]);
   const [loading, setLoading] = useState(true);
   const [origin, setOrigin] = useState("");
+  const [showToast, setShowToast] = useState(false);
 
   useEffect(() => {
     setOrigin(window.location.origin);
@@ -61,7 +62,8 @@ export default function PurchasesPage() {
     e.stopPropagation();
     const inviteLink = `${origin}/app/invite/${batchId}`;
     navigator.clipboard.writeText(inviteLink);
-    alert("Invite link copied to clipboard!");
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 2500);
   };
 
   return (
@@ -118,7 +120,7 @@ export default function PurchasesPage() {
                   <div className="mt-4 pt-4 border-t border-border flex items-end justify-between">
                     <div>
                       <p className="text-xs font-bold uppercase tracking-wider text-muted mb-1">Total Cost</p>
-                      <p className="text-sm font-bold text-brand-black">{order.total_amount_mwk.toLocaleString()} MWK</p>
+                      <p className="text-sm font-bold text-brand-black">{Math.ceil(order.total_amount_mwk).toLocaleString()} MWK</p>
                     </div>
 
                     {order.is_peer && order.total_peers > 0 && order.joined_peers !== undefined && (
@@ -155,6 +157,12 @@ export default function PurchasesPage() {
             );
           })}
         </ul>
+      )}
+
+      {showToast && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] rounded-full bg-brand-black px-4 py-2 text-sm font-bold text-white shadow-lg animate-in fade-in slide-in-from-bottom-5">
+          Invite link copied!
+        </div>
       )}
     </div>
   );

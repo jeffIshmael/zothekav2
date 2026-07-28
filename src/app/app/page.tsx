@@ -28,7 +28,7 @@ export default function HomePage() {
   const { rate, kycVerified, kycFirstName, kycPhone } = useAppData();
   const router = useRouter();
 
-  console.log("Smart Wallet Address:", client?.account?.address || user?.wallet?.address);
+
 
   const [targetEmail, setTargetEmail] = useState("");
   const [targetPassword, setTargetPassword] = useState("");
@@ -42,18 +42,19 @@ export default function HomePage() {
   const [verifyModalOpen, setVerifyModalOpen] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [generatedBatchId, setGeneratedBatchId] = useState("");
+  const [showToast, setShowToast] = useState(false);
 
   const selectedPkg = SPOTIFY_PACKAGES.find((p) => p.id === selectedPkgId)!;
   const baseUsd = selectedPkg.priceKsh / KSH_TO_USD_RATE;
   const serviceFeeUsd = Math.max(1, Math.floor(baseUsd / CONCIERGE_FEE_INTERVAL)) * CONCIERGE_FEE_USD;
   const totalUsd = baseUsd + serviceFeeUsd;
 
-  const baseMwk = baseUsd * rate;
-  const serviceFeeMwk = serviceFeeUsd * rate;
-  const totalMwk = totalUsd * rate;
+  const baseMwk = Math.ceil(baseUsd * rate);
+  const serviceFeeMwk = Math.ceil(serviceFeeUsd * rate);
+  const totalMwk = baseMwk + serviceFeeMwk;
 
   const members = isSolo ? 1 : friendsCount;
-  const splitMwk = totalMwk / members;
+  const splitMwk = Math.ceil(totalMwk / members);
 
   // If a package is changed, ensure the friendsCount is within bounds
   useEffect(() => {
@@ -427,7 +428,8 @@ export default function HomePage() {
                     onClick={() => {
                       const link = `${window.location.origin}/app/invite/${generatedBatchId}`;
                       navigator.clipboard.writeText(link);
-                      alert("Invite link copied to clipboard!");
+                      setShowToast(true);
+                      setTimeout(() => setShowToast(false), 2500);
                     }}
                     className="mt-4 w-full flex items-center justify-center gap-2 rounded-xl bg-brand-green/10 py-2.5 text-sm font-bold text-brand-green transition hover:bg-brand-green/20"
                   >
@@ -490,6 +492,12 @@ export default function HomePage() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {showToast && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] rounded-full bg-brand-black px-4 py-2 text-sm font-bold text-white shadow-lg animate-in fade-in slide-in-from-bottom-5">
+          Invite link copied!
         </div>
       )}
     </div>
