@@ -28,6 +28,7 @@ export default function PurchaseDetailsPage() {
   const [order, setOrder] = useState<PurchaseDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [origin, setOrigin] = useState("");
+  const [showToast, setShowToast] = useState(false);
 
   useEffect(() => {
     setOrigin(window.location.origin);
@@ -65,7 +66,19 @@ export default function PurchaseDetailsPage() {
     if (!order?.batch_id) return;
     const inviteLink = `${origin}/app/invite/${order.batch_id}`;
     navigator.clipboard.writeText(inviteLink);
-    alert("Invite link copied to clipboard!");
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+  };
+
+  const sliceEmail = (emailStr: string) => {
+    if (!emailStr) return "Anonymous";
+    const parts = emailStr.split("@");
+    if (parts.length !== 2) return emailStr;
+    const [local, domain] = parts;
+    if (local.length <= 5) return emailStr;
+    const firstFive = local.slice(0, 5);
+    const lastThree = local.length > 8 ? local.slice(-3) : local.slice(5);
+    return `${firstFive}...${lastThree}@${domain}`;
   };
 
   if (loading) {
@@ -157,7 +170,7 @@ export default function PurchaseDetailsPage() {
                       </div>
                       <div className="min-w-0">
                         <p className="text-sm font-bold text-brand-black truncate" title={peer.email || "Anonymous"}>
-                          {peer.email || "Anonymous"}
+                          {sliceEmail(peer.email)}
                         </p>
                         <p className="text-[10px] font-semibold text-muted mt-0.5">Paid at {paidTime}</p>
                       </div>
@@ -184,6 +197,15 @@ export default function PurchaseDetailsPage() {
           </div>
         )}
       </div>
+
+      {showToast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-brand-black text-white px-5 py-3 rounded-xl text-sm font-semibold shadow-lg transition-all duration-300 z-50 flex items-center gap-2">
+          <svg className="w-4 h-4 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+          Invite link copied!
+        </div>
+      )}
     </div>
   );
 }

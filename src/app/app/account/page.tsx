@@ -23,6 +23,7 @@ export default function AccountPage() {
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [showRewardsInfo, setShowRewardsInfo] = useState(false);
   const [origin, setOrigin] = useState("");
+  const [showToast, setShowToast] = useState("");
 
   useEffect(() => {
     setOrigin(window.location.origin);
@@ -34,7 +35,8 @@ export default function AccountPage() {
   const copyReferral = (e: React.MouseEvent) => {
     e.preventDefault();
     navigator.clipboard.writeText(referralLink);
-    alert("Referral link copied!");
+    setShowToast("Referral link copied!");
+    setTimeout(() => setShowToast(""), 3000);
   };
 
   const handleSignOut = () => {
@@ -275,6 +277,15 @@ export default function AccountPage() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {showToast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-brand-black text-white px-5 py-3 rounded-xl text-sm font-semibold shadow-lg transition-all duration-300 z-50 flex items-center gap-2">
+          <svg className="w-4 h-4 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+          {showToast}
         </div>
       )}
     </div>

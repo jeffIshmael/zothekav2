@@ -45,6 +45,15 @@ export default function AddUsdPage() {
   const [tab, setTab] = useState<FiatTab>("usd");
   const [customAmount, setCustomAmount] = useState("");
 
+  const [showToast, setShowToast] = useState("");
+  const [toastType, setToastType] = useState<"success" | "error">("error");
+
+  const triggerToast = (msg: string, type: "success" | "error" = "error") => {
+      setShowToast(msg);
+      setToastType(type);
+      setTimeout(() => setShowToast(""), 3000);
+  };
+
   const refreshBalance = useCallback(async () => {
     if (!email) return;
     try {
@@ -185,7 +194,7 @@ export default function AddUsdPage() {
       } else {
         await refreshBalance();
       }
-      alert(result.message);
+      triggerToast(result.message, "success");
     } catch (err) {
       const message =
         err instanceof BridgeRequestError
@@ -320,7 +329,7 @@ export default function AddUsdPage() {
                 onClick={() => {
                   const amount = Number(customAmount);
                   if (!amount || amount <= 0) {
-                    alert("Enter a positive amount.");
+                    triggerToast("Enter a positive amount.");
                     return;
                   }
                   void handleSimulateDeposit(amount, "custom", tab);
@@ -344,6 +353,19 @@ export default function AddUsdPage() {
             Withdraw to MWK
           </button>
         </>
+      )}
+
+      {showToast && (
+          <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 px-5 py-3 rounded-xl text-sm font-semibold shadow-lg transition-all duration-300 z-50 flex items-center gap-2 ${toastType === 'error' ? 'bg-brand-red text-white' : 'bg-brand-black text-white'}`}>
+              <svg className={`w-4 h-4 ${toastType === 'error' ? 'text-white' : 'text-brand-green'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  {toastType === 'error' ? (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  ) : (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  )}
+              </svg>
+              {showToast}
+          </div>
       )}
     </div>
   );

@@ -23,6 +23,15 @@ export default function InvitePage() {
     const [inviteDetails, setInviteDetails] = useState<any>(null);
     const [loadingInvite, setLoadingInvite] = useState(true);
     const [inviteError, setInviteError] = useState("");
+    
+    const [showToast, setShowToast] = useState("");
+    const [toastType, setToastType] = useState<"success" | "error">("error");
+
+    const triggerToast = (msg: string, type: "success" | "error" = "error") => {
+        setShowToast(msg);
+        setToastType(type);
+        setTimeout(() => setShowToast(""), 3000);
+    };
 
     useEffect(() => {
         if (!batchId) return;
@@ -50,11 +59,16 @@ export default function InvitePage() {
 
     const handleJoinAndPay = async () => {
         if (!targetEmail || !targetEmail.includes("@")) {
-            alert("NEW_CODE_LOADED: Please provide a valid Spotify email.");
+            triggerToast("Please provide a valid Spotify email.");
             return;
         }
 
         setJoining(true);
+        // Simulate prompt sent to phone UX before making the actual request 
+        // (since ElementPay sandbox auto-settles dummy numbers instantly)
+        setPromptSent(true);
+        await new Promise(resolve => setTimeout(resolve, 5000));
+        
         const baseUrl = process.env.NEXT_PUBLIC_ZOTHEKA_WEB_URL?.replace(/\/$/, "") ?? "http://localhost:5000";
 
         try {
@@ -76,15 +90,13 @@ export default function InvitePage() {
                     console.error("Non-JSON error from server:", errText);
                     err = { error: "Server returned an unexpected error format. See console." };
                 }
-                alert(err.error || "Failed to join");
+                triggerToast(err.error || "Failed to join");
                 setJoining(false);
                 return;
             }
 
-            // At this point, the join API succeeded, meaning the prompt has been sent.
-            // Let's update the UI to indicate this.
-            setJoining(true); // Ensure it's still marked as joining
-            setPromptSent(true);
+            // At this point, the join API succeeded and sandbox auto-settled.
+            setJoining(true); 
 
             // Poll for payment success
             const checkStatus = async () => {
@@ -130,7 +142,7 @@ export default function InvitePage() {
 
             router.push("/app/success?solo=true");
         } catch (err: any) {
-            alert(err.message || "An error occurred");
+            triggerToast(err.message || "An error occurred");
             setJoining(false);
             setPromptSent(false);
         }
@@ -291,6 +303,19 @@ export default function InvitePage() {
                     </>
                 )}
             </div>
+
+            {showToast && (
+                <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 px-5 py-3 rounded-xl text-sm font-semibold shadow-lg transition-all duration-300 z-50 flex items-center gap-2 ${toastType === 'error' ? 'bg-brand-red text-white' : 'bg-brand-black text-white'}`}>
+                    <svg className={`w-4 h-4 ${toastType === 'error' ? 'text-white' : 'text-brand-green'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        {toastType === 'error' ? (
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        ) : (
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        )}
+                    </svg>
+                    {showToast}
+                </div>
+            )}
         </div>
     );
 }
