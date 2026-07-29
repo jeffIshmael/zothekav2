@@ -25,7 +25,7 @@ export default function HomePage() {
   const { user } = usePrivy();
   const { client } = useSmartWallets();
   const { email } = useAuth();
-  const { rate, kycVerified, kycFirstName, kycPhone } = useAppData();
+  const { rate, minAmount, kycVerified, kycFirstName, kycPhone } = useAppData();
   const router = useRouter();
 
 
@@ -168,8 +168,8 @@ export default function HomePage() {
   };
 
   const isMalawian = kycPhone && (kycPhone.startsWith("+265") || kycPhone.startsWith("265") || kycPhone.startsWith("0"));
-  const isFormValid = targetEmail.trim().length > 0 && targetPassword.length > 0 && kycVerified !== false;
-
+  const isBelowMin = splitMwk < minAmount;
+  const isFormValid = targetEmail.trim().length > 0 && targetPassword.length > 0 && kycVerified !== false && isMalawian && !isBelowMin;
   const displayName = kycFirstName || (email ? email.split("@")[0] : "there");
 
   return (
@@ -222,11 +222,13 @@ export default function HomePage() {
           Provide your login details securely. We will manually upgrade your account. You can pay solo or split the cost with peers!
         </p>
 
-        {(!kycVerified || (kycPhone && !isMalawian)) && (
+        {(!kycVerified || (kycPhone && !isMalawian) || isBelowMin) && (
           <div className="mt-3 rounded-lg bg-brand-yellow/20 p-2 text-xs font-semibold text-brand-black">
             {!kycVerified
               ? "You must complete KYC verification to use this service."
-              : "This service is currently restricted to Malawian numbers."}
+              : !isMalawian
+              ? "This service is currently restricted to Malawian numbers."
+              : `Minimum amount per person is ${minAmount.toLocaleString()} MWK.`}
           </div>
         )}
       </div>
@@ -378,6 +380,8 @@ export default function HomePage() {
             "Verify identity to pay"
           ) : (!isMalawian) ? (
             "Malawian number required"
+          ) : (isBelowMin) ? (
+            `Min ${minAmount.toLocaleString()} MWK required`
           ) : (!targetEmail.trim() || !targetPassword.trim()) ? (
             "Fill details to pay"
           ) : (

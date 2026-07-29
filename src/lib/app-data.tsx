@@ -12,6 +12,7 @@ type AppDataContextValue = {
   kycNetwork: string | null;
   kycWalletAddress: string | null;
   rate: number;
+  minAmount: number;
   loading: boolean;
   pendingPurchasesCount: number;
   refresh: () => Promise<void>;
@@ -29,6 +30,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [kycWalletAddress, setKycWalletAddress] = useState<string | null>(null);
   const [pendingPurchasesCount, setPendingPurchasesCount] = useState<number>(0);
   const [rate, setRate] = useState<number>(1700);
+  const [minAmount, setMinAmount] = useState<number>(2000);
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
@@ -57,6 +59,10 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         setRate(resolveUsdToMwkRate(monitor.usd_to_mwk_rate));
       }
 
+      if (elementPayInfo?.minAmount) {
+        setMinAmount(elementPayInfo.minAmount);
+      }
+
       setKycVerified(kycRes.kyc_verified);
       setKycFirstName(null);
       setKycPhone(kycRes.kyc_phone || null);
@@ -75,7 +81,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   }, [refresh]);
 
   return (
-    <AppDataContext.Provider value={{ kycVerified, kycFirstName, kycPhone, kycNetwork, kycWalletAddress, rate, loading, pendingPurchasesCount, refresh }}>
+    <AppDataContext.Provider value={{ kycVerified, kycFirstName, kycPhone, kycNetwork, kycWalletAddress, rate, minAmount, loading, pendingPurchasesCount, refresh }}>
       {children}
     </AppDataContext.Provider>
   );
