@@ -37,7 +37,7 @@ export function LandingFooter() {
             About
           </Link>
           <Link
-            href="/app"
+            href="https://app.zotheka.xyz"
             target="_blank"
             rel="noopener noreferrer"
             className="font-semibold text-brand-green transition hover:underline"

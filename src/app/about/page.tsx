@@ -83,7 +83,7 @@ export default function AboutPage() {
 
           <div className="mt-16 flex flex-wrap gap-3">
             <Link
-              href="/app"
+              href="https://app.zotheka.xyz"
               target="_blank"
               rel="noopener noreferrer"
               className="rounded-full bg-brand-green px-7 py-3.5 text-sm font-bold text-white shadow-lg shadow-brand-green/30 transition hover:bg-brand-green-dark"
