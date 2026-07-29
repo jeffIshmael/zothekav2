@@ -13,7 +13,7 @@ export default function InvitePage() {
 
     const { ready, authenticated, login } = usePrivy();
     const { email } = useAuth();
-    const { kycVerified, kycPhone, refresh } = useAppData();
+    const { minAmount, kycVerified, kycPhone, refresh } = useAppData();
     const isMalawian = kycPhone && (kycPhone.startsWith("+265") || kycPhone.startsWith("265") || kycPhone.startsWith("0"));
 
     const [denied, setDenied] = useState(false);
@@ -22,6 +22,7 @@ export default function InvitePage() {
     const [promptSent, setPromptSent] = useState(false);
 
     const [inviteDetails, setInviteDetails] = useState<any>(null);
+    const isBelowMin = inviteDetails?.splitAmountMwk ? inviteDetails.splitAmountMwk < minAmount : false;
     const [loadingInvite, setLoadingInvite] = useState(true);
     const [inviteError, setInviteError] = useState("");
     
@@ -274,14 +275,14 @@ export default function InvitePage() {
                     />
                 </div>
 
-                {(!kycVerified || (kycPhone && !isMalawian)) && (
+                {(!kycVerified || (kycPhone && !isMalawian) || isBelowMin) && (
                     <div className="mb-6 flex items-center justify-between rounded-xl border border-brand-yellow/20 bg-brand-yellow/10 p-4">
                         <div className="flex flex-col text-left">
                             <span className="text-[15px] font-semibold text-brand-black">
-                                {!kycVerified ? "Identity Verification" : "Malawian Number Required"}
+                                {!kycVerified ? "Identity Verification" : !isMalawian ? "Malawian Number Required" : "Amount Too Small"}
                             </span>
                             <span className="mt-1 w-fit rounded-full bg-brand-yellow/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-yellow-600">
-                                {!kycVerified ? "Required to pay" : "This service is restricted to Malawi"}
+                                {!kycVerified ? "Required to pay" : !isMalawian ? "This service is restricted to Malawi" : `Minimum ${minAmount.toLocaleString()} MWK`}
                             </span>
                         </div>
                         {!kycVerified && (
@@ -303,8 +304,8 @@ export default function InvitePage() {
                     )}
                     <button
                         onClick={handleJoinAndPay}
-                        disabled={kycVerified === false || !isMalawian || joining || !targetEmail}
-                        className={`w-full py-4 rounded-xl text-white font-bold text-lg transition shadow-card flex items-center justify-center gap-2 ${kycVerified === false || !isMalawian ? "bg-gray-300 opacity-60 cursor-not-allowed" : "bg-brand-green hover:bg-brand-green-dark"}`}
+                        disabled={kycVerified === false || !isMalawian || isBelowMin || joining || !targetEmail}
+                        className={`w-full py-4 rounded-xl text-white font-bold text-lg transition shadow-card flex items-center justify-center gap-2 ${kycVerified === false || !isMalawian || isBelowMin ? "bg-gray-300 opacity-60 cursor-not-allowed" : "bg-brand-green hover:bg-brand-green-dark"}`}
                     >
                     {joining ? (
                         promptSent ? (
