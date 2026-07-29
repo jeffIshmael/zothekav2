@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
-import { User, CreditCard, Info, FileText, Shield, LogOut, ChevronRight, ExternalLink, AlertTriangle, Share2, Copy, HelpCircle, Lock } from "lucide-react";
+import { User, CreditCard, Info, FileText, Shield, LogOut, ChevronRight, ExternalLink, AlertTriangle, Share2, Copy, HelpCircle, Lock, LayoutDashboard } from "lucide-react";
 import { useAppData } from "@/lib/app-data";
 
 const XIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -24,6 +24,11 @@ export default function AccountPage() {
   const [showRewardsInfo, setShowRewardsInfo] = useState(false);
   const [origin, setOrigin] = useState("");
   const [showToast, setShowToast] = useState("");
+
+  const adminEmails = process.env.NEXT_PUBLIC_ADMIN_EMAILS 
+    ? process.env.NEXT_PUBLIC_ADMIN_EMAILS.split(",").map((e: string) => e.trim().toLowerCase())
+    : ["jeffishmael141@gmail.com", "goodnpaul@gmail.com"];
+  const isAdmin = email ? adminEmails.includes(email.toLowerCase()) : false;
 
   useEffect(() => {
     setOrigin(window.location.origin);
@@ -143,6 +148,26 @@ export default function AccountPage() {
           )}
         </div>
       </div>
+
+      {isAdmin && (
+        <>
+          <p className="mt-8 text-xs font-bold uppercase tracking-wider text-brand-green">Admin Portal</p>
+          <div className="mt-3 overflow-hidden rounded-2xl bg-surface shadow-card flex flex-col divide-y divide-border border border-brand-green/20">
+            <Link
+              href="/app/admin"
+              className="flex items-center justify-between px-4 py-4 text-left hover:bg-background transition"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-green/10 text-brand-green-dark">
+                  <LayoutDashboard className="h-4 w-4" />
+                </div>
+                <span className="text-[15px] font-semibold text-brand-black">Activity Dashboard</span>
+              </div>
+              <ChevronRight className="h-5 w-5 text-muted" />
+            </Link>
+          </div>
+        </>
+      )}
 
       <p className="mt-8 text-xs font-bold uppercase tracking-wider text-muted">Legal & Info</p>
       <div className="mt-3 overflow-hidden rounded-2xl bg-surface shadow-card flex flex-col divide-y divide-border">

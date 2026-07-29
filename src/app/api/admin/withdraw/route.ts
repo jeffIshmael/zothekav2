@@ -13,7 +13,7 @@ const pool = new Pool({
 });
 
 function isAdmin(email: string) {
-  const adminEmails = process.env.ADMIN_EMAILS || "";
+  const adminEmails = process.env.ADMIN_EMAILS || process.env.NEXT_PUBLIC_ADMIN_EMAILS || "";
   return adminEmails.split(",").map(e => e.trim().toLowerCase()).includes(email.toLowerCase());
 }
 

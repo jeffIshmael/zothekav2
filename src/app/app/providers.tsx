@@ -59,7 +59,8 @@ function AppShell({ children }: { children: ReactNode }) {
   const isTerms = pathname === "/app/terms";
   const isPrivacy = pathname === "/app/privacy";
   const isInvite = pathname.startsWith("/app/invite/");
-  const showNav = !isSignIn && !isKyc && !isAbout && !isTerms && !isPrivacy && !isInvite;
+  const isAdmin = pathname.startsWith("/app/admin");
+  const showNav = !isSignIn && !isKyc && !isAbout && !isTerms && !isPrivacy && !isInvite && !isAdmin;
 
   useEffect(() => {
     if (isLoading) return;
@@ -80,6 +81,14 @@ function AppShell({ children }: { children: ReactNode }) {
 
   if (!isAuthenticated && !isSignIn && !isInvite) {
     return null;
+  }
+
+  if (isAdmin) {
+    return (
+      <div className="min-h-screen bg-background">
+        <main>{children}</main>
+      </div>
+    );
   }
 
   return (
