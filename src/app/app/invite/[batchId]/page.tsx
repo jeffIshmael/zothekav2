@@ -14,6 +14,7 @@ export default function InvitePage() {
     const { ready, authenticated, login } = usePrivy();
     const { email } = useAuth();
     const { kycVerified, kycPhone, refresh } = useAppData();
+    const isMalawian = kycPhone && (kycPhone.startsWith("+265") || kycPhone.startsWith("265") || kycPhone.startsWith("0"));
 
     const [denied, setDenied] = useState(false);
     const [targetEmail, setTargetEmail] = useState("");
@@ -273,33 +274,37 @@ export default function InvitePage() {
                     />
                 </div>
 
-                {kycVerified === false && (
+                {(!kycVerified || (kycPhone && !isMalawian)) && (
                     <div className="mb-6 flex items-center justify-between rounded-xl border border-brand-yellow/20 bg-brand-yellow/10 p-4">
                         <div className="flex flex-col text-left">
-                            <span className="text-[15px] font-semibold text-brand-black">Identity Verification</span>
+                            <span className="text-[15px] font-semibold text-brand-black">
+                                {!kycVerified ? "Identity Verification" : "Malawian Number Required"}
+                            </span>
                             <span className="mt-1 w-fit rounded-full bg-brand-yellow/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-yellow-600">
-                                Required to pay
+                                {!kycVerified ? "Required to pay" : "This service is restricted to Malawi"}
                             </span>
                         </div>
-                        <button
-                            onClick={() => router.push(`/app/kyc?returnUrl=/app/invite/${batchId}`)}
-                            className="rounded-full bg-brand-yellow px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-brand-yellow/90"
-                        >
-                            Verify Now
-                        </button>
+                        {!kycVerified && (
+                            <button
+                                onClick={() => router.push(`/app/kyc?returnUrl=/app/invite/${batchId}`)}
+                                className="rounded-full bg-brand-yellow px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-brand-yellow/90"
+                            >
+                                Verify Now
+                            </button>
+                        )}
                     </div>
                 )}
 
                 <>
-                    {kycVerified !== false && (
+                    {kycVerified !== false && isMalawian && (
                         <p className="text-center text-[13px] text-muted font-medium mb-3">
                             Payment prompt will be sent to <span className="font-bold text-brand-black">{kycPhone || "your registered number"}</span>
                         </p>
                     )}
                     <button
                         onClick={handleJoinAndPay}
-                        disabled={kycVerified === false || joining || !targetEmail}
-                        className={`w-full py-4 rounded-xl text-white font-bold text-lg transition shadow-card flex items-center justify-center gap-2 ${kycVerified === false ? "bg-gray-300 opacity-60 cursor-not-allowed" : "bg-brand-green hover:bg-brand-green-dark"}`}
+                        disabled={kycVerified === false || !isMalawian || joining || !targetEmail}
+                        className={`w-full py-4 rounded-xl text-white font-bold text-lg transition shadow-card flex items-center justify-center gap-2 ${kycVerified === false || !isMalawian ? "bg-gray-300 opacity-60 cursor-not-allowed" : "bg-brand-green hover:bg-brand-green-dark"}`}
                     >
                     {joining ? (
                         promptSent ? (

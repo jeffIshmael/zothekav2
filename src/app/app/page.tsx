@@ -71,11 +71,10 @@ export default function HomePage() {
       setErrorMsg("Please enter both email and password.");
       return;
     }
-    // Bypassing KYC check for demo purposes
-    // if (kycVerified === false) {
-    //   setVerifyModalOpen(true);
-    //   return;
-    // }
+    if (kycVerified === false) {
+      setVerifyModalOpen(true);
+      return;
+    }
 
     setPaying(true);
     setErrorMsg("");
@@ -169,8 +168,7 @@ export default function HomePage() {
   };
 
   const isMalawian = kycPhone && (kycPhone.startsWith("+265") || kycPhone.startsWith("265") || kycPhone.startsWith("0"));
-  // Bypassing KYC check for demo purposes
-  const isFormValid = targetEmail.trim().length > 0 && targetPassword.length > 0;
+  const isFormValid = targetEmail.trim().length > 0 && targetPassword.length > 0 && kycVerified !== false;
 
   const displayName = kycFirstName || (email ? email.split("@")[0] : "there");
 
@@ -228,7 +226,7 @@ export default function HomePage() {
           <div className="mt-3 rounded-lg bg-brand-yellow/20 p-2 text-xs font-semibold text-brand-black">
             {!kycVerified
               ? "You must complete KYC verification to use this service."
-              : "This service is optimized for Malawian numbers."}
+              : "This service is currently restricted to Malawian numbers."}
           </div>
         )}
       </div>
@@ -376,7 +374,11 @@ export default function HomePage() {
         >
           {paying ? (
             "Processing..."
-          ) : !isFormValid ? (
+          ) : (!kycVerified) ? (
+            "Verify identity to pay"
+          ) : (!isMalawian) ? (
+            "Malawian number required"
+          ) : (!targetEmail.trim() || !targetPassword.trim()) ? (
             "Fill details to pay"
           ) : (
             <>
