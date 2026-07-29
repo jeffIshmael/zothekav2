@@ -15,6 +15,8 @@ type AppDataContextValue = {
   minAmount: number;
   loading: boolean;
   pendingPurchasesCount: number;
+  referralCode: string | null;
+  referralsCount: number;
   refresh: () => Promise<void>;
 };
 
@@ -32,6 +34,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [rate, setRate] = useState<number>(1700);
   const [minAmount, setMinAmount] = useState<number>(2000);
   const [loading, setLoading] = useState(true);
+  const [referralCode, setReferralCode] = useState<string | null>(null);
+  const [referralsCount, setReferralsCount] = useState<number>(0);
 
   const refresh = useCallback(async () => {
     if (!email) {
@@ -68,6 +72,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       setKycPhone(kycRes.kyc_phone || null);
       setKycNetwork("base");
       setKycWalletAddress(kycRes.smart_wallet_address || null);
+      setReferralCode(kycRes.referral_code || null);
+      setReferralsCount(kycRes.referrals_count || 0);
       setPendingPurchasesCount(0);
     } catch (err) {
       console.error("Failed to load app data", err);
@@ -81,7 +87,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   }, [refresh]);
 
   return (
-    <AppDataContext.Provider value={{ kycVerified, kycFirstName, kycPhone, kycNetwork, kycWalletAddress, rate, minAmount, loading, pendingPurchasesCount, refresh }}>
+    <AppDataContext.Provider value={{ kycVerified, kycFirstName, kycPhone, kycNetwork, kycWalletAddress, rate, minAmount, loading, pendingPurchasesCount, referralCode, referralsCount, refresh }}>
       {children}
     </AppDataContext.Provider>
   );

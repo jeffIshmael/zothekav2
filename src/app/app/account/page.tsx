@@ -18,7 +18,7 @@ export default function AccountPage() {
   const router = useRouter();
   const { email, signOut } = useAuth();
   
-  const { kycVerified, kycPhone, loading: dataLoading } = useAppData();
+  const { kycVerified, kycPhone, loading: dataLoading, referralCode, referralsCount } = useAppData();
   
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [showRewardsInfo, setShowRewardsInfo] = useState(false);
@@ -34,8 +34,7 @@ export default function AccountPage() {
     setOrigin(window.location.origin);
   }, []);
 
-  const referralCode = "VHJDGA"; // Mock code
-  const referralLink = `${origin}/app/sign-in/${referralCode}`;
+  const referralLink = referralCode ? `${origin}/app/sign-in?ref=${referralCode}` : "";
 
   const copyReferral = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -110,7 +109,9 @@ export default function AccountPage() {
               </div>
               <div className="flex flex-col">
                 <span className="text-[15px] font-semibold text-brand-black">Invite Friends</span>
-                <span className="text-xs font-medium text-muted">Share your link and earn rewards</span>
+                <span className="text-xs font-medium text-muted">
+                  {referralsCount > 0 ? `You have referred ${referralsCount} ${referralsCount === 1 ? 'person' : 'people'}` : 'Share your link and earn rewards'}
+                </span>
               </div>
             </div>
             <button 
