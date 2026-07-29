@@ -45,9 +45,6 @@ export default function LandingPage() {
         />
 
         <div className="relative mx-auto max-w-6xl px-4 py-24 sm:px-6 sm:py-36">
-          <p className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-white/70">
-            🇲🇼 Built for Malawi
-          </p>
 
           <div className="max-w-4xl">
             <h1 className="text-balance text-5xl font-extrabold leading-[1.05] tracking-tighter sm:text-6xl lg:text-7xl">
@@ -242,9 +239,6 @@ export default function LandingPage() {
             />
             <div className="relative flex flex-col gap-8 px-8 py-10 sm:px-12 lg:flex-row lg:items-center lg:justify-between">
               <div className="max-w-xl">
-                <p className="text-xs font-bold uppercase tracking-widest text-white/60">
-                  🇲🇼 Made in Malawi, for Malawi
-                </p>
                 <h3 className="mt-3 text-2xl font-extrabold tracking-tight sm:text-3xl">
                   Ready to see it work?
                 </h3>
