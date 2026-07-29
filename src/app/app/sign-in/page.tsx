@@ -41,7 +41,7 @@ export default function SignInPage() {
         <div className="relative mt-10">
           <h1 className="text-4xl font-extrabold tracking-tight">Zotheka</h1>
           <p className="mt-3 max-w-sm text-base leading-relaxed text-white/90">
-            Netflix, Spotify &amp; more, paid with your mobile money.
+            Spotify &amp; more, paid with your mobile money.
           </p>
           <div className="mt-6 flex flex-wrap gap-2">
             {["Netflix", "Spotify", "Google Play"].map((brand) => (
@@ -60,7 +60,7 @@ export default function SignInPage() {
         <div className="flex flex-1 flex-col px-6 pt-8 pb-6">
           <h2 className="text-xl font-extrabold">Create your account</h2>
           <p className="mt-1 text-sm leading-relaxed text-muted">
-            Sign up in seconds. Track purchases and withdraw USD to MWK anytime.
+            Sign up in seconds. Pay and split Spotify subscriptions effortlessly with MWK.
           </p>
 
           {!isPrivyConfigured ? (
