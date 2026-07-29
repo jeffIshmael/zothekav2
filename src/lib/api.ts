@@ -120,12 +120,10 @@ export function getMonitor() {
   return request<MonitorStatus>("/monitor");
 }
 
-export async function getTransactions(email: string, type?: string) {
+export function getTransactions(email: string, type?: string) {
   const params = new URLSearchParams({ email });
   if (type) params.append("type", type);
-  const response = await fetch(`/api/transactions?${params}`);
-  if (!response.ok) throw new Error("Failed to get transactions");
-  return response.json() as Promise<{ transactions: Transaction[] }>;
+  return request<{ transactions: Transaction[] }>(`/api/transactions?${params}`);
 }
 
 export async function saveTransaction(input: {

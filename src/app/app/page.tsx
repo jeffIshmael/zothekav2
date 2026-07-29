@@ -25,7 +25,7 @@ export default function HomePage() {
   const { user } = usePrivy();
   const { client } = useSmartWallets();
   const { email } = useAuth();
-  const { rate, minAmount, kycVerified, kycFirstName, kycPhone } = useAppData();
+  const { rate, minAmount, kycVerified, kycFirstName, kycPhone, loading } = useAppData();
   const router = useRouter();
 
 
@@ -171,6 +171,15 @@ export default function HomePage() {
   const isBelowMin = splitMwk < minAmount;
   const isFormValid = targetEmail.trim().length > 0 && targetPassword.length > 0 && kycVerified !== false && isMalawian && !isBelowMin;
   const displayName = kycFirstName || (email ? email.split("@")[0] : "there");
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 pt-4 pb-20">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-green border-t-transparent" />
+        <p className="mt-4 text-sm font-semibold text-muted">Fetching live rates...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="px-4 pt-4 pb-20">
