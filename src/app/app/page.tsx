@@ -172,15 +172,6 @@ export default function HomePage() {
   const isFormValid = targetEmail.trim().length > 0 && targetPassword.length > 0 && kycVerified !== false && isMalawian && !isBelowMin;
   const displayName = kycFirstName || (email ? email.split("@")[0] : "there");
 
-  if (loading) {
-    return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 pt-4 pb-20">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-green border-t-transparent" />
-        <p className="mt-4 text-sm font-semibold text-muted">Fetching live rates...</p>
-      </div>
-    );
-  }
-
   return (
     <div className="px-4 pt-4 pb-20">
       {/* Header */}
@@ -285,8 +276,12 @@ export default function HomePage() {
                 )}
                 <span className="font-bold text-brand-black mt-1 pr-6">{pkg.name}</span>
                 <span className="text-[10px] text-muted">{pkg.desc}</span>
-                <span className="mt-2 text-xs font-bold text-brand-green">
-                  {((pkg.priceKsh / KSH_TO_USD_RATE) * rate).toLocaleString(undefined, { maximumFractionDigits: 0 })} MWK / mo
+                <span className="mt-2 text-xs font-bold text-brand-green flex items-center h-4">
+                  {loading ? (
+                    <span className="inline-block h-3.5 w-16 animate-pulse rounded bg-brand-green/20"></span>
+                  ) : (
+                    `${((pkg.priceKsh / KSH_TO_USD_RATE) * rate).toLocaleString(undefined, { maximumFractionDigits: 0 })} MWK / mo`
+                  )}
                 </span>
               </button>
             ))}
@@ -345,16 +340,20 @@ export default function HomePage() {
         <div className="rounded-xl border border-border bg-surface p-4">
           <div className="mb-2 flex items-center justify-between text-sm">
             <span className="text-muted font-medium">Package Cost</span>
-            <span className="font-bold">{baseMwk.toLocaleString(undefined, { maximumFractionDigits: 0 })} MWK</span>
+            <span className="font-bold flex items-center h-5">
+              {loading ? <span className="inline-block h-3.5 w-14 animate-pulse rounded bg-muted/20"></span> : `${baseMwk.toLocaleString(undefined, { maximumFractionDigits: 0 })} MWK`}
+            </span>
           </div>
           <div className="mb-3 flex items-center justify-between text-sm">
             <span className="text-muted font-medium">Processing Fee</span>
-            <span className="font-bold">{serviceFeeMwk.toLocaleString(undefined, { maximumFractionDigits: 0 })} MWK</span>
+            <span className="font-bold flex items-center h-5">
+              {loading ? <span className="inline-block h-3.5 w-10 animate-pulse rounded bg-muted/20"></span> : `${serviceFeeMwk.toLocaleString(undefined, { maximumFractionDigits: 0 })} MWK`}
+            </span>
           </div>
           <div className="flex items-center justify-between border-t border-border pt-3">
             <span className="font-bold text-brand-black">Total Amount</span>
-            <span className={isSolo ? "text-lg font-black text-brand-green" : "font-black text-brand-black"}>
-              {totalMwk.toLocaleString(undefined, { maximumFractionDigits: 0 })} MWK
+            <span className={`${isSolo ? "text-lg font-black text-brand-green" : "font-black text-brand-black"} flex items-center h-7`}>
+              {loading ? <span className="inline-block h-5 w-20 animate-pulse rounded bg-current opacity-20"></span> : `${totalMwk.toLocaleString(undefined, { maximumFractionDigits: 0 })} MWK`}
             </span>
           </div>
           {!isSolo && (
@@ -365,8 +364,8 @@ export default function HomePage() {
                   ÷ {members} Peers
                 </span>
               </div>
-              <span className="text-lg font-black text-brand-green">
-                {splitMwk.toLocaleString(undefined, { maximumFractionDigits: 0 })} MWK
+              <span className="text-lg font-black text-brand-green flex items-center h-7">
+                {loading ? <span className="inline-block h-5 w-20 animate-pulse rounded bg-brand-green/20"></span> : `${splitMwk.toLocaleString(undefined, { maximumFractionDigits: 0 })} MWK`}
               </span>
             </div>
           )}
@@ -395,7 +394,9 @@ export default function HomePage() {
             "Fill details to pay"
           ) : (
             <>
-              <span>Pay {splitMwk.toLocaleString(undefined, { maximumFractionDigits: 0 })} MWK</span>
+              <span className="flex items-center gap-1.5">
+                Pay {loading ? <span className="inline-block h-4 w-12 animate-pulse rounded bg-white/30"></span> : `${splitMwk.toLocaleString(undefined, { maximumFractionDigits: 0 })} MWK`}
+              </span>
               {kycPhone && <span className="text-[10px] font-medium text-white/80">via {kycPhone}</span>}
             </>
           )}
