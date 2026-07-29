@@ -1,18 +1,26 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, notFound } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import { API_BASE_URL } from "@/lib/config";
-import { Loader2, ShieldAlert, ArrowRightLeft, CheckCircle2, AlertCircle, Copy, Check } from "lucide-react";
+import { Loader2, ArrowRightLeft, CheckCircle2, AlertCircle, Copy, Check } from "lucide-react";
 
 export default function AdminDashboard() {
-  const { email } = useAuth();
+  const { email, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [purchases, setPurchases] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<"Not Full" | "Awaiting Upgrade" | "Completed">("Awaiting Upgrade");
   const [errorMsg, setErrorMsg] = useState("");
+
+  const adminEmails = process.env.NEXT_PUBLIC_ADMIN_EMAILS 
+    ? process.env.NEXT_PUBLIC_ADMIN_EMAILS.split(",").map(e => e.trim().toLowerCase())
+    : ["jeffishmael141@gmail.com", "goodnpaul@gmail.com"];
+
+  if (!authLoading && (!email || !adminEmails.includes(email.toLowerCase()))) {
+    notFound();
+  }
 
   // Withdraw State
   const [showWithdraw, setShowWithdraw] = useState(false);
@@ -98,21 +106,10 @@ export default function AdminDashboard() {
     }
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="flex h-[80vh] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-brand-green" />
-      </div>
-    );
-  }
-
-  if (errorMsg === "Unauthorized to view dashboard.") {
-    return (
-      <div className="flex h-[80vh] flex-col items-center justify-center text-center">
-        <ShieldAlert className="h-16 w-16 text-red-500 mb-4" />
-        <h1 className="text-3xl font-black text-brand-black">Unauthorized</h1>
-        <p className="mt-2 text-muted">You do not have admin access.</p>
-        <button onClick={() => router.push("/")} className="mt-8 rounded-full bg-brand-black px-6 py-3 font-bold text-white">Return Home</button>
       </div>
     );
   }
