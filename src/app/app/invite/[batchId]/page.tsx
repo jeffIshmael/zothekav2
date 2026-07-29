@@ -323,7 +323,12 @@ export default function InvitePage() {
                         `Secure Pay ${Math.ceil(inviteDetails?.splitAmountMwk || 0).toLocaleString()} MWK`
                     )}
                 </button>
-                <p className="text-center text-[10px] text-muted mt-4">v2.1.4</p>
+                <button
+                    onClick={() => router.push("/app")}
+                    className="mt-6 flex w-full items-center justify-center text-xs font-bold text-muted transition hover:text-brand-black"
+                >
+                    &lt; Back to home
+                </button>
                 </>
             </div>
 
