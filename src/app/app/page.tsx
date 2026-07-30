@@ -16,7 +16,7 @@ const CONCIERGE_FEE_INTERVAL = 5;
 
 const SPOTIFY_PACKAGES = [
   { id: "individual", name: "Individual", priceKsh: 470, desc: "1 Premium account", maxUsers: 1 },
-  { id: "student", name: "Student", priceKsh: 260, desc: "1 verified Premium account", maxUsers: 1 },
+  // Student package removed
   { id: "duo", name: "Duo", priceKsh: 600, desc: "2 Premium accounts", maxUsers: 2 },
   { id: "family", name: "Family", priceKsh: 720, desc: "Up to 6 Premium accounts", maxUsers: 6 },
 ];

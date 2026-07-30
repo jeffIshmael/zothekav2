@@ -57,7 +57,7 @@ export default function AboutPage() {
                 <div>
                   <h3 className="font-bold text-brand-black mb-1">Choose Your Package</h3>
                   <p className="leading-relaxed text-muted">
-                    Pick Solo, Student, Duo, or Family. Duo and Family plans can be paid in full
+                    Pick Solo, Duo, or Family. Duo and Family plans can be paid in full
                     by you, or split with peers.
                   </p>
                 </div>

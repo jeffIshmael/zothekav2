@@ -4,7 +4,17 @@ import { useState, useEffect } from "react";
 import { useRouter, notFound } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import { API_BASE_URL } from "@/lib/config";
-import { Loader2, ArrowRightLeft, CheckCircle2, AlertCircle, Copy, Check } from "lucide-react";
+import {
+  Loader2,
+  ArrowRightLeft,
+  CheckCircle2,
+  AlertCircle,
+  Copy,
+  Check,
+  Activity,
+  Clock,
+  Wallet,
+} from "lucide-react";
 
 export default function AdminDashboard() {
   const { email, isLoading: authLoading } = useAuth();
@@ -14,32 +24,38 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<"Not Full" | "Awaiting Upgrade" | "Completed">("Awaiting Upgrade");
   const [errorMsg, setErrorMsg] = useState("");
 
-  const adminEmails = process.env.NEXT_PUBLIC_ADMIN_EMAILS 
+  const adminEmails = process.env.NEXT_PUBLIC_ADMIN_EMAILS
     ? process.env.NEXT_PUBLIC_ADMIN_EMAILS.split(",").map(e => e.trim().toLowerCase())
-    : ["jeffishmael141@gmail.com", "goodnpaul@gmail.com"];
+    : ["jeffishmael141@gmail.com", "goodingispaul@gmail.com"];
 
   if (!authLoading && (!email || !adminEmails.includes(email.toLowerCase()))) {
     notFound();
   }
 
-  // Withdraw State
+  // Withdraw state
   const [showWithdraw, setShowWithdraw] = useState(false);
   const [treasury, setTreasury] = useState<any>(null);
   const [withdrawKsh, setWithdrawKsh] = useState("");
   const [withdrawing, setWithdrawing] = useState(false);
   const [withdrawSuccess, setWithdrawSuccess] = useState(false);
 
+  // Activity log state
+  const [activity, setActivity] = useState<any[]>([]);
+  const [activityLoading, setActivityLoading] = useState(true);
+  const [activityError, setActivityError] = useState("");
+
   useEffect(() => {
     if (email) {
       fetchPurchases();
       fetchTreasury();
+      fetchActivity();
     }
   }, [email]);
 
   const fetchPurchases = async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/admin/purchases`, {
-        headers: { "X-User-Email": email || "" }
+        headers: { "X-User-Email": email || "" },
       });
       if (res.ok) {
         const data = await res.json();
@@ -65,14 +81,35 @@ export default function AdminDashboard() {
     }
   };
 
+  const fetchActivity = async () => {
+    setActivityLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/activity`, {
+        headers: { "X-User-Email": email || "" },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setActivity(data);
+      } else {
+        setActivityError("Couldn't load admin activity.");
+      }
+    } catch (e) {
+      console.error("Activity fetch error", e);
+      setActivityError("Couldn't load admin activity.");
+    } finally {
+      setActivityLoading(false);
+    }
+  };
+
   const handleComplete = async (purchaseId: string) => {
     try {
       const res = await fetch(`${API_BASE_URL}/admin/purchases/${purchaseId}/complete`, {
         method: "POST",
-        headers: { "X-User-Email": email || "" }
+        headers: { "X-User-Email": email || "" },
       });
       if (res.ok) {
-        fetchPurchases(); // refresh
+        fetchPurchases();
+        fetchActivity();
       }
     } catch (e) {
       console.error("Complete error", e);
@@ -92,13 +129,14 @@ export default function AdminDashboard() {
           email,
           amountUsdc: usdcAmt.toFixed(6),
           phone: treasury?.phone,
-          providerId: treasury?.network
-        })
+          providerId: treasury?.network,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Withdraw failed");
       setWithdrawSuccess(true);
       fetchTreasury();
+      fetchActivity();
     } catch (e: any) {
       setErrorMsg(e.message);
     } finally {
@@ -119,51 +157,85 @@ export default function AdminDashboard() {
   const awaitingUpgrade = purchases.filter(p => p.status !== "COMPLETED" && (!p.is_peer || p.joined_peers >= p.total_peers));
   const completed = purchases.filter(p => p.status === "COMPLETED");
 
+  const tabs: { label: typeof activeTab; count?: number }[] = [
+    { label: "Not Full", count: notFull.length },
+    { label: "Awaiting Upgrade", count: awaitingUpgrade.length },
+    { label: "Completed", count: completed.length },
+  ];
+
   const currentList = activeTab === "Not Full" ? notFull : activeTab === "Awaiting Upgrade" ? awaitingUpgrade : completed;
 
+  const kshBalance = treasury?.balanceUsdc != null ? treasury.balanceUsdc * (treasury?.indicativeRate || 130) : null;
+
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
-      <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="mx-auto max-w-4xl px-4 py-8 md:py-10">
+      {/* Header */}
+      <div className="mb-8 flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
         <div>
+          <p className="mb-1 text-xs font-bold uppercase tracking-widest text-brand-green">Operations</p>
           <h1 className="text-3xl font-black tracking-tight text-brand-black">Admin Dashboard</h1>
-          <p className="text-muted">Manage Spotify purchases and treasury.</p>
+          <p className="mt-1 text-sm text-muted">Manage Spotify purchases, treasury, and team activity.</p>
         </div>
-        
+
         {treasury && (
-          <div className="flex items-center gap-4 rounded-2xl bg-brand-gray/30 p-4 border border-border">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-muted">Treasury (USDC)</p>
-              <p className="text-xl font-black text-brand-black">${treasury.balanceUsdc?.toFixed(2)}</p>
+          <div className="flex items-center gap-4 rounded-2xl border border-border bg-surface p-4 shadow-sm">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-green/10">
+              <Wallet className="h-5 w-5 text-brand-green" />
             </div>
-            <button 
-              onClick={() => { setShowWithdraw(true); setWithdrawSuccess(false); setErrorMsg(""); setWithdrawKsh(""); }}
-              className="rounded-full bg-brand-green px-4 py-2 text-sm font-bold text-white transition hover:bg-brand-green-dark shadow-sm flex items-center gap-2"
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-muted">Treasury</p>
+              <p className="text-xl font-black leading-tight text-brand-black">
+                ${treasury.balanceUsdc?.toFixed(2)}
+                <span className="ml-1 text-xs font-bold text-muted">USDC</span>
+              </p>
+              {kshBalance != null && (
+                <p className="text-xs font-semibold text-muted">
+                  ≈ KSh {kshBalance.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                </p>
+              )}
+            </div>
+            <button
+              onClick={() => {
+                setShowWithdraw(true);
+                setWithdrawSuccess(false);
+                setErrorMsg("");
+                setWithdrawKsh("");
+              }}
+              className="flex shrink-0 items-center gap-2 rounded-full bg-brand-green px-4 py-2.5 text-sm font-bold text-white transition hover:bg-brand-green-dark"
             >
-              <ArrowRightLeft className="w-4 h-4" /> Withdraw
+              <ArrowRightLeft className="h-4 w-4" /> Withdraw
             </button>
           </div>
         )}
       </div>
 
       {/* Tabs */}
-      <div className="flex overflow-x-auto border-b border-border mb-6 no-scrollbar">
-        {["Not Full", "Awaiting Upgrade", "Completed"].map(tab => (
+      <div className="mb-6 flex gap-2 overflow-x-auto no-scrollbar">
+        {tabs.map(tab => (
           <button
-            key={tab}
-            onClick={() => setActiveTab(tab as any)}
-            className={`whitespace-nowrap py-3 px-6 text-sm font-bold transition ${activeTab === tab ? "border-b-2 border-brand-green text-brand-green" : "text-muted hover:text-brand-black"}`}
+            key={tab.label}
+            onClick={() => setActiveTab(tab.label)}
+            className={`flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition ${
+              activeTab === tab.label
+                ? "bg-brand-black text-white"
+                : "bg-brand-gray/30 text-muted hover:bg-brand-gray/50 hover:text-brand-black"
+            }`}
           >
-            {tab}
-            {tab === "Awaiting Upgrade" && awaitingUpgrade.length > 0 && (
-              <span className="ml-2 inline-flex items-center justify-center rounded-full bg-red-500 px-2 py-0.5 text-[10px] text-white">
-                {awaitingUpgrade.length}
+            {tab.label}
+            {!!tab.count && (
+              <span
+                className={`inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1 text-[10px] ${
+                  activeTab === tab.label ? "bg-white/20 text-white" : "bg-brand-black/10 text-brand-black"
+                }`}
+              >
+                {tab.count}
               </span>
             )}
           </button>
         ))}
       </div>
 
-      {/* Orders List */}
+      {/* Orders list */}
       <div className="space-y-4">
         {currentList.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border py-12 text-center text-muted">
@@ -171,20 +243,24 @@ export default function AdminDashboard() {
           </div>
         ) : (
           currentList.map(p => (
-            <div key={p.id} className="rounded-2xl border border-border bg-surface p-5 shadow-sm">
-              <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 mb-4">
+            <div key={p.id} className="rounded-2xl border border-border bg-surface p-5 shadow-sm transition hover:shadow-md">
+              <div className="mb-4 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div>
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="mb-1 flex items-center gap-2">
                     <h3 className="text-lg font-black text-brand-black">{p.product_name}</h3>
                     {p.is_peer ? (
-                       <span className="rounded-full bg-blue-100 text-blue-700 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider">Group</span>
+                      <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-700">
+                        Group
+                      </span>
                     ) : (
-                       <span className="rounded-full bg-purple-100 text-purple-700 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider">Solo</span>
+                      <span className="rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-purple-700">
+                        Solo
+                      </span>
                     )}
                   </div>
                   <p className="text-sm text-muted">Initiator: {p.initiator_email}</p>
                 </div>
-                
+
                 <div className="text-left md:text-right">
                   <p className="text-sm font-bold text-brand-black">{p.total_amount_mwk.toLocaleString()} MWK Total</p>
                   {p.is_peer && (
@@ -195,23 +271,23 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <div className="rounded-xl bg-brand-gray/30 p-4 mb-4">
-                <p className="text-xs font-bold text-muted uppercase tracking-wider mb-2">Target Account (Initiator)</p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="mb-4 rounded-xl bg-brand-gray/30 p-4">
+                <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted">Target Account (Initiator)</p>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div>
-                    <p className="text-xs text-muted mb-1">Spotify Email</p>
+                    <p className="mb-1 text-xs text-muted">Spotify Email</p>
                     <div className="flex items-center gap-2">
-                       <p className="font-semibold text-brand-black truncate">{p.target_email}</p>
-                       <CopyBtn text={p.target_email} />
+                      <p className="truncate font-semibold text-brand-black">{p.target_email}</p>
+                      <CopyBtn text={p.target_email} />
                     </div>
                   </div>
                   <div>
-                    <p className="text-xs text-muted mb-1">Spotify Password</p>
+                    <p className="mb-1 text-xs text-muted">Spotify Password</p>
                     <div className="flex items-center gap-2">
-                       <p className="font-mono text-sm bg-white border border-border px-2 py-0.5 rounded-md text-brand-black truncate">
-                         {p.target_password || "N/A"}
-                       </p>
-                       {p.target_password && <CopyBtn text={p.target_password} />}
+                      <p className="truncate rounded-md border border-border bg-white px-2 py-0.5 font-mono text-sm text-brand-black">
+                        {p.target_password || "N/A"}
+                      </p>
+                      {p.target_password && <CopyBtn text={p.target_password} />}
                     </div>
                   </div>
                 </div>
@@ -219,13 +295,13 @@ export default function AdminDashboard() {
 
               {p.is_peer && p.participants && p.participants.length > 0 && (
                 <div className="mb-4">
-                  <p className="text-xs font-bold text-muted uppercase tracking-wider mb-2">Group Members (Invite These)</p>
+                  <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted">Group Members (Invite These)</p>
                   <div className="space-y-2">
                     {p.participants.map((pt: any) => (
-                      <div key={pt.id} className="flex items-center justify-between bg-brand-gray/10 rounded-lg p-3 text-sm">
+                      <div key={pt.id} className="flex items-center justify-between rounded-lg bg-brand-gray/10 p-3 text-sm">
                         <div>
                           <p className="font-bold text-brand-black">{pt.user_email}</p>
-                          <p className="text-muted text-xs">Spotify: {pt.target_email}</p>
+                          <p className="text-xs text-muted">Spotify: {pt.target_email}</p>
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="font-semibold">{pt.amount_mwk.toLocaleString()} MWK</span>
@@ -252,30 +328,74 @@ export default function AdminDashboard() {
         )}
       </div>
 
+      {/* Admin Activity Log */}
+      <div className="mt-10">
+        <div className="mb-4 flex items-center gap-2">
+          <Activity className="h-4 w-4 text-brand-green" />
+          <h2 className="text-lg font-black text-brand-black">Admin Activity</h2>
+        </div>
+
+        <div className="rounded-2xl border border-border bg-surface shadow-sm">
+          {activityLoading ? (
+            <div className="flex items-center justify-center py-10">
+              <Loader2 className="h-5 w-5 animate-spin text-muted" />
+            </div>
+          ) : activityError ? (
+            <div className="flex items-center gap-2 px-5 py-8 text-sm text-muted">
+              <AlertCircle className="h-4 w-4" /> {activityError}
+            </div>
+          ) : activity.length === 0 ? (
+            <div className="px-5 py-8 text-center text-sm text-muted">No admin activity recorded yet.</div>
+          ) : (
+            <ul className="divide-y divide-border">
+              {activity.map((a, i) => (
+                <li key={a.id ?? i} className="flex items-start gap-3 px-5 py-4">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-gray/40 text-xs font-black text-brand-black">
+                    {a.admin_email?.charAt(0)?.toUpperCase() || "?"}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm text-brand-black">
+                      <span className="font-bold">{a.admin_email}</span> {a.action}
+                      {a.detail ? <span className="text-muted"> — {a.detail}</span> : null}
+                    </p>
+                    <p className="mt-0.5 flex items-center gap-1 text-xs text-muted">
+                      <Clock className="h-3 w-3" />
+                      {a.created_at ? new Date(a.created_at).toLocaleString() : "—"}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+
       {/* Withdraw Modal */}
       {showWithdraw && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
-            <h2 className="text-2xl font-black text-brand-black mb-1">Withdraw to KSH</h2>
-            <p className="text-sm text-muted mb-6">Funds will be sent to your Safaricom M-PESA ({treasury?.phone}).</p>
-            
+            <h2 className="mb-1 text-2xl font-black text-brand-black">Withdraw to KSH</h2>
+            <p className="mb-6 text-sm text-muted">Funds will be sent to your Safaricom M-PESA ({treasury?.phone}).</p>
+
             {withdrawSuccess ? (
-               <div className="text-center py-6">
-                 <CheckCircle2 className="w-16 h-16 text-brand-green mx-auto mb-4" />
-                 <h3 className="text-xl font-bold text-brand-black mb-2">Withdrawal Initiated!</h3>
-                 <p className="text-sm text-muted mb-6">Your transaction has been submitted to ElementPay and the blockchain.</p>
-                 <button onClick={() => setShowWithdraw(false)} className="w-full rounded-full bg-brand-black px-4 py-3 font-bold text-white">Close</button>
-               </div>
+              <div className="py-6 text-center">
+                <CheckCircle2 className="mx-auto mb-4 h-16 w-16 text-brand-green" />
+                <h3 className="mb-2 text-xl font-bold text-brand-black">Withdrawal Initiated!</h3>
+                <p className="mb-6 text-sm text-muted">Your transaction has been submitted to ElementPay and the blockchain.</p>
+                <button onClick={() => setShowWithdraw(false)} className="w-full rounded-full bg-brand-black px-4 py-3 font-bold text-white">
+                  Close
+                </button>
+              </div>
             ) : (
               <>
                 <div className="mb-4">
-                  <label className="text-xs font-bold uppercase tracking-wider text-muted mb-2 block">Amount in KES</label>
+                  <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-muted">Amount in KES</label>
                   <div className="relative">
                     <span className="absolute left-4 top-3 font-bold text-brand-black">KSh</span>
-                    <input 
-                      type="number" 
+                    <input
+                      type="number"
                       value={withdrawKsh}
-                      onChange={(e) => setWithdrawKsh(e.target.value)}
+                      onChange={e => setWithdrawKsh(e.target.value)}
                       placeholder="0.00"
                       className="w-full rounded-xl bg-brand-gray/30 py-3 pl-14 pr-4 font-black text-brand-black outline-none focus:ring-2 focus:ring-brand-green"
                     />
@@ -288,22 +408,22 @@ export default function AdminDashboard() {
                 </div>
 
                 {errorMsg && (
-                   <div className="mb-4 flex items-start gap-2 rounded-xl bg-red-50 p-3 text-red-600">
-                     <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                     <p className="text-xs font-bold">{errorMsg}</p>
-                   </div>
+                  <div className="mb-4 flex items-start gap-2 rounded-xl bg-red-50 p-3 text-red-600">
+                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                    <p className="text-xs font-bold">{errorMsg}</p>
+                  </div>
                 )}
 
-                <div className="flex gap-3 mt-6">
+                <div className="mt-6 flex gap-3">
                   <button onClick={() => setShowWithdraw(false)} className="flex-1 rounded-full bg-brand-gray/50 py-3 font-bold text-brand-black hover:bg-brand-gray">
                     Cancel
                   </button>
-                  <button 
+                  <button
                     onClick={handleWithdraw}
                     disabled={withdrawing || !withdrawKsh}
-                    className="flex-1 rounded-full bg-brand-green py-3 font-bold text-white hover:bg-brand-green-dark disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="flex flex-1 items-center justify-center gap-2 rounded-full bg-brand-green py-3 font-bold text-white hover:bg-brand-green-dark disabled:opacity-50"
                   >
-                    {withdrawing ? <Loader2 className="w-4 h-4 animate-spin" /> : "Confirm"}
+                    {withdrawing ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirm"}
                   </button>
                 </div>
               </>
@@ -318,11 +438,15 @@ export default function AdminDashboard() {
 function CopyBtn({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
   return (
-    <button 
-      onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
-      className="p-1.5 hover:bg-brand-black/10 rounded-md transition text-muted hover:text-brand-black"
+    <button
+      onClick={() => {
+        navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }}
+      className="rounded-md p-1.5 text-muted transition hover:bg-brand-black/10 hover:text-brand-black"
     >
-      {copied ? <Check className="w-3.5 h-3.5 text-brand-green" /> : <Copy className="w-3.5 h-3.5" />}
+      {copied ? <Check className="h-3.5 w-3.5 text-brand-green" /> : <Copy className="h-3.5 w-3.5" />}
     </button>
   );
 }

@@ -10,7 +10,7 @@ const SECTIONS = [
   },
   {
     title: "Services Provided",
-    body: "Zotheka lets you pay for Spotify Premium packages (Solo, Student, Duo, and Family) using Malawian Kwacha via local mobile money providers (Airtel Money and TNM Mpamba). For Duo and Family packages, Zotheka lets you split the cost with other people and add their Spotify accounts to the plan once each person has paid their share.",
+    body: "Zotheka lets you pay for Spotify Premium packages (Solo, Duo, and Family) using Malawian Kwacha via local mobile money providers (Airtel Money and TNM Mpamba). For Duo and Family packages, Zotheka lets you split the cost with other people and add their Spotify accounts to the plan once each person has paid their share.",
   },
   {
     title: "Account & KYC Registration",

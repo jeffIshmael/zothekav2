@@ -52,15 +52,15 @@ export const TWO_PILLARS = [
     label: "Starting a plan",
     title: "Pick a package, split it your way",
     summary:
-      "Choose Solo, Student, Duo, or Family. Duo and Family plans can be paid solo or split with peers — you decide.",
+      "Choose Solo, Duo, or Family. Duo and Family plans can be paid solo or split with peers — you decide.",
     steps: [
-      "Choose your package: Solo, Student, Duo, or Family",
+      "Choose your package: Solo, Duo, or Family",
       "For Duo or Family, choose to pay it solo or split it with peers",
       "If splitting, pick how many people — the cost divides automatically",
       "Pay your own share via mobile money",
       "Get a link to share with the rest of your peers",
     ],
-    examples: ["Solo", "Student", "Duo", "Family"],
+    examples: ["Solo", "Duo", "Family"],
   },
   {
     id: "join",
@@ -87,7 +87,7 @@ export const ABOUT_SECTIONS = [
   {
     heading: "Four packages, your choice",
     body:
-      "Solo and Student packages are single accounts, paid in full by one person. Duo (2 accounts) and Family (6 accounts) can be paid solo too, or split across as many people as the package allows.",
+      "Solo packages are single accounts, paid in full by one person. Duo (2 accounts) and Family (6 accounts) can be paid solo too, or split across as many people as the package allows.",
   },
   {
     heading: "Splitting is built in, not informal",

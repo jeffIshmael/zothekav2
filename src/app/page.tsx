@@ -62,7 +62,7 @@ export default function LandingPage() {
 
           <div className="mt-8 flex flex-wrap items-center gap-2 mt-6">
             <span className="text-xs text-white/30 mr-1">Packages</span>
-            {["Solo", "Student", "Duo · 2 accounts", "Family · 6 accounts"].map((s) => (
+            {["Solo", "Duo · 2 accounts", "Family · 6 accounts"].map((s) => (
               <span
                 key={s}
                 className="rounded-full border border-white/10 bg-white/5 px-3.5 py-1.5 text-xs font-semibold text-white/70"
