@@ -4,10 +4,11 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ChevronLeft, Users, Calendar, Coins, Wallet, Mail } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import { usePrivy } from "@privy-io/react-auth";
 import { useAppData } from "@/lib/app-data";
 
 export default function ReferralsDashboard() {
-  const { getToken } = useAuth();
+  const { getAccessToken } = usePrivy();
   const { kycWalletAddress, rate } = useAppData();
   
   const [stats, setStats] = useState({
@@ -23,7 +24,7 @@ export default function ReferralsDashboard() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const token = await getToken();
+        const token = await getAccessToken();
         if (!token) return;
 
         // Fetch referral stats
@@ -52,7 +53,7 @@ export default function ReferralsDashboard() {
     }
 
     fetchData();
-  }, [getToken, kycWalletAddress]);
+  }, [getAccessToken, kycWalletAddress]);
 
   const usdcValueInMwk = usdcBalance * rate;
 
