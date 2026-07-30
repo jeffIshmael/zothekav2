@@ -1,4 +1,4 @@
-export const DEFAULT_USD_TO_MWK_RATE = 1700;
+export const DEFAULT_USD_TO_MWK_RATE = 4650;
 
 export function resolveUsdToMwkRate(rate?: number | null): number {
   return typeof rate === "number" && rate > 0 ? rate : DEFAULT_USD_TO_MWK_RATE;

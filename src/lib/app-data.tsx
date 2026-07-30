@@ -31,7 +31,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [kycNetwork, setKycNetwork] = useState<string | null>(null);
   const [kycWalletAddress, setKycWalletAddress] = useState<string | null>(null);
   const [pendingPurchasesCount, setPendingPurchasesCount] = useState<number>(0);
-  const [rate, setRate] = useState<number>(1700);
+  const [rate, setRate] = useState<number>(4650);
   const [minAmount, setMinAmount] = useState<number>(2000);
   const [loading, setLoading] = useState(true);
   const [referralCode, setReferralCode] = useState<string | null>(null);

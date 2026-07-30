@@ -32,7 +32,7 @@ export default function OnrampPage() {
   const [phoneTouched, setPhoneTouched] = useState(false);
   const [amountTouched, setAmountTouched] = useState(false);
 
-  const [rate, setRate] = useState<number>(1700);
+  const [rate, setRate] = useState<number>(4650);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
