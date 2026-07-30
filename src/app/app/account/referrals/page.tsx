@@ -87,7 +87,7 @@ export default function ReferralsDashboard() {
               <div className="rounded-2xl bg-surface p-4 border border-border shadow-sm flex flex-col justify-between">
                 <div className="flex items-center gap-2 text-brand-green">
                   <Users className="h-4 w-4" />
-                  <span className="text-xs font-semibold uppercase tracking-wider">Total</span>
+                  <span className="text-xs font-semibold uppercase tracking-wider">Total referrals</span>
                 </div>
                 <div className="mt-3 text-2xl font-black text-brand-black">
                   {stats.total_referrals}
@@ -97,7 +97,7 @@ export default function ReferralsDashboard() {
               <div className="rounded-2xl bg-surface p-4 border border-border shadow-sm flex flex-col justify-between">
                 <div className="flex items-center gap-2 text-brand-yellow">
                   <Calendar className="h-4 w-4" />
-                  <span className="text-xs font-semibold uppercase tracking-wider">Today</span>
+                  <span className="text-xs font-semibold uppercase tracking-wider">Today&apos;s referrals</span>
                 </div>
                 <div className="mt-3 text-2xl font-black text-brand-black">
                   {stats.today_referrals}
@@ -113,7 +113,7 @@ export default function ReferralsDashboard() {
                   <span className="text-xs font-semibold uppercase tracking-wider">Estimated Total Earnings</span>
                 </div>
                 <div className="mt-2 text-3xl font-black text-white">
-                  MK {stats.total_earnings_mwk.toLocaleString()}
+                 {stats.total_earnings_mwk.toLocaleString()} MWK
                 </div>
               </div>
             </div>
@@ -123,14 +123,11 @@ export default function ReferralsDashboard() {
               <div className="relative z-10 flex flex-col">
                 <div className="flex items-center gap-2 text-white/70">
                   <Wallet className="h-4 w-4 text-brand-green" />
-                  <span className="text-xs font-semibold uppercase tracking-wider">Wallet Balance (USDC in MWK)</span>
+                  <span className="text-xs font-semibold uppercase tracking-wider">Total Balance</span>
                 </div>
                 <div className="mt-2 flex flex-col">
                   <span className="text-3xl font-black text-white">
-                    MK {usdcValueInMwk.toLocaleString()}
-                  </span>
-                  <span className="text-sm font-medium text-brand-green mt-1">
-                    {usdcBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDC
+                    {usdcValueInMwk.toLocaleString()} MWK
                   </span>
                 </div>
               </div>
