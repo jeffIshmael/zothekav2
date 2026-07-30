@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
-import { User, CreditCard, Info, FileText, Shield, LogOut, ChevronRight, ExternalLink, AlertTriangle, Share2, Copy, HelpCircle, Lock, LayoutDashboard } from "lucide-react";
+import { User, CreditCard, Info, FileText, Shield, LogOut, ChevronRight, ExternalLink, AlertTriangle, Share2, Copy, HelpCircle, Lock, LayoutDashboard, Coins } from "lucide-react";
 import { useAppData } from "@/lib/app-data";
 
 const XIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -148,6 +148,21 @@ export default function AccountPage() {
             </div>
           )}
         </div>
+        <Link
+          href="/app/account/referrals"
+          className="flex items-center justify-between px-4 py-4 text-left hover:bg-background transition"
+        >
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-yellow/10 text-brand-yellow">
+              <Coins className="h-4 w-4" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[15px] font-semibold text-brand-black">Referral Earnings</span>
+              <span className="text-xs font-medium text-muted">View your invites and rewards</span>
+            </div>
+          </div>
+          <ChevronRight className="h-5 w-5 text-muted" />
+        </Link>
       </div>
 
       {isAdmin && (
