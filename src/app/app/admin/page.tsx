@@ -14,6 +14,7 @@ import {
   Activity,
   Clock,
   Wallet,
+  X,
 } from "lucide-react";
 
 export default function AdminDashboard() {
@@ -40,6 +41,7 @@ export default function AdminDashboard() {
   const [withdrawSuccess, setWithdrawSuccess] = useState(false);
 
   // Activity log state
+  const [showActivity, setShowActivity] = useState(false);
   const [activity, setActivity] = useState<any[]>([]);
   const [activityLoading, setActivityLoading] = useState(true);
   const [activityError, setActivityError] = useState("");
@@ -173,7 +175,16 @@ export default function AdminDashboard() {
       <div className="mb-8 flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
         <div>
           <p className="mb-1 text-xs font-bold uppercase tracking-widest text-brand-green">Operations</p>
-          <h1 className="text-3xl font-black tracking-tight text-brand-black">Admin Dashboard</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-black tracking-tight text-brand-black">Admin Dashboard</h1>
+            <button
+              onClick={() => setShowActivity(true)}
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-gray/30 text-muted transition hover:bg-brand-gray/50 hover:text-brand-black"
+              title="View Admin Activity"
+            >
+              <Activity className="h-5 w-5" />
+            </button>
+          </div>
           <p className="mt-1 text-sm text-muted">Manage Spotify purchases, treasury, and team activity.</p>
         </div>
 
@@ -328,47 +339,58 @@ export default function AdminDashboard() {
         )}
       </div>
 
-      {/* Admin Activity Log */}
-      <div className="mt-10">
-        <div className="mb-4 flex items-center gap-2">
-          <Activity className="h-4 w-4 text-brand-green" />
-          <h2 className="text-lg font-black text-brand-black">Admin Activity</h2>
-        </div>
-
-        <div className="rounded-2xl border border-border bg-surface shadow-sm">
-          {activityLoading ? (
-            <div className="flex items-center justify-center py-10">
-              <Loader2 className="h-5 w-5 animate-spin text-muted" />
+      {/* Activity Modal */}
+      {showActivity && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col rounded-3xl bg-white shadow-2xl">
+            <div className="flex shrink-0 items-center justify-between p-6 pb-4 border-b border-border">
+              <div className="flex items-center gap-2">
+                <Activity className="h-5 w-5 text-brand-green" />
+                <h2 className="text-xl font-black text-brand-black">Admin Activity</h2>
+              </div>
+              <button onClick={() => setShowActivity(false)} className="rounded-full bg-brand-gray/50 p-2 text-muted hover:bg-brand-gray hover:text-brand-black">
+                <X className="h-5 w-5" />
+              </button>
             </div>
-          ) : activityError ? (
-            <div className="flex items-center gap-2 px-5 py-8 text-sm text-muted">
-              <AlertCircle className="h-4 w-4" /> {activityError}
+            
+            <div className="flex-1 overflow-y-auto bg-surface p-6">
+              {activityLoading ? (
+                <div className="flex items-center justify-center py-10">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted" />
+                </div>
+              ) : activityError ? (
+                <div className="flex items-center gap-2 rounded-xl bg-red-50 px-5 py-4 text-sm text-red-600">
+                  <AlertCircle className="h-4 w-4 shrink-0" /> {activityError}
+                </div>
+              ) : activity.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-border py-12 text-center text-sm text-muted">
+                  No admin activity recorded yet.
+                </div>
+              ) : (
+                <ul className="divide-y divide-border rounded-2xl border border-border bg-white shadow-sm">
+                  {activity.map((a, i) => (
+                    <li key={a.id ?? i} className="flex items-start gap-3 px-5 py-4">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-gray/40 text-xs font-black text-brand-black">
+                        {a.admin_email?.charAt(0)?.toUpperCase() || "?"}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm text-brand-black">
+                          <span className="font-bold">{a.admin_email}</span> {a.action}
+                          {a.detail ? <span className="text-muted"> — {a.detail}</span> : null}
+                        </p>
+                        <p className="mt-0.5 flex items-center gap-1 text-xs text-muted">
+                          <Clock className="h-3 w-3" />
+                          {a.created_at ? new Date(a.created_at).toLocaleString() : "—"}
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
-          ) : activity.length === 0 ? (
-            <div className="px-5 py-8 text-center text-sm text-muted">No admin activity recorded yet.</div>
-          ) : (
-            <ul className="divide-y divide-border">
-              {activity.map((a, i) => (
-                <li key={a.id ?? i} className="flex items-start gap-3 px-5 py-4">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-gray/40 text-xs font-black text-brand-black">
-                    {a.admin_email?.charAt(0)?.toUpperCase() || "?"}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm text-brand-black">
-                      <span className="font-bold">{a.admin_email}</span> {a.action}
-                      {a.detail ? <span className="text-muted"> — {a.detail}</span> : null}
-                    </p>
-                    <p className="mt-0.5 flex items-center gap-1 text-xs text-muted">
-                      <Clock className="h-3 w-3" />
-                      {a.created_at ? new Date(a.created_at).toLocaleString() : "—"}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Withdraw Modal */}
       {showWithdraw && (
@@ -402,7 +424,7 @@ export default function AdminDashboard() {
                   </div>
                   {withdrawKsh && (
                     <p className="mt-2 text-xs font-medium text-brand-green">
-                      Estimated Cost: ~{(Number(withdrawKsh) / (treasury?.indicativeRate || 130)).toFixed(2)} USDC
+                      Estimated USDC: ~{(Number(withdrawKsh) / (treasury?.indicativeRate || 130)).toFixed(2)} USDC
                     </p>
                   )}
                 </div>
