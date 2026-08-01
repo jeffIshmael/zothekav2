@@ -1,4 +1,5 @@
 import { createPublicClient, createWalletClient, http } from "viem";
+import { eip7702Actions } from "viem/experimental";
 import { base } from "viem/chains";
 import { privateKeyToAccount } from "viem/accounts";
 import crypto from "crypto";
@@ -43,7 +44,7 @@ export function getClients() {
     account,
     chain: base,
     transport: http(paymasterUrl || undefined),
-  });
+  }).extend(eip7702Actions);
 
   return { account, publicClient, walletClient, paymasterUrl };
 }

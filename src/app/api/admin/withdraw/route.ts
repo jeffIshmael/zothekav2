@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getClients } from "@/lib/cdp-paymaster";
-import { erc20Abi } from "viem";
+import { erc20Abi, encodeFunctionData } from "viem";
 import { Pool } from "pg";
 
 const ELEMENTPAY_API = process.env.ELEMENTPAY_API_URL || "https://api.elementpay.net/api/v1";
@@ -111,12 +111,21 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    let customerName = user.name || "Admin User";
+    if (!customerName.trim().includes(" ")) {
+      customerName += " User";
+    }
+
+    let safeAmountUsdc = Number(amountUsdc);
+    // Ensure amount is slightly padded to prevent 149.99 KES due to rate fluctuations
+    safeAmountUsdc = safeAmountUsdc * 1.02;
+
     // 1. Create ElementPay Quote
     const quotePayload = {
       order_type: "OffRamp",
       customer: {
         uid: `admin-${user.id}`,
-        name: user.name || "Admin",
+        name: customerName,
         email: user.email,
         phone: phone,
         dob: dob,
@@ -135,7 +144,7 @@ export async function POST(req: NextRequest) {
         network: "BASE",
         token: USDC_ADDRESS
       },
-      crypto_amount: Number(amountUsdc),
+      crypto_amount: safeAmountUsdc,
       country: "KE",
       currency: "KES", 
       refund_address: getClients().account.address, 
@@ -167,21 +176,31 @@ export async function POST(req: NextRequest) {
     }
 
     const orderPayload = acceptData.data || {};
-    const depositAddress = orderPayload.deposit_address || orderPayload.address;
+    const depositAddress = orderPayload.order?.wallet_address || orderPayload.accepted?.payment_instructions?.wallet_address;
     if (!depositAddress) {
       return NextResponse.json({ error: "No deposit address returned from ElementPay" }, { status: 500 });
     }
 
     // 3. EIP-7702 Transaction with viem (Using Paymaster if configured)
     const { publicClient, walletClient, account } = getClients();
-    const amountToTransfer = BigInt(Math.floor(Number(amountUsdc) * 1e6)); 
+    const amountToTransfer = BigInt(Math.floor(Number(safeAmountUsdc) * 1e6)); 
 
-    const hash = await walletClient.writeContract({
-      address: USDC_ADDRESS,
+    const data = encodeFunctionData({
       abi: erc20Abi,
       functionName: "transfer",
       args: [depositAddress as `0x${string}`, amountToTransfer],
+    });
+
+    const authorization = await walletClient.signAuthorization({
       account,
+      contractAddress: "0x7702cb554e6bFb442cb743A7dF23154544a7176C",
+    });
+
+    const hash = await walletClient.sendTransaction({
+      account,
+      to: USDC_ADDRESS,
+      data,
+      authorizationList: [authorization],
       chain: walletClient.chain
     });
 
