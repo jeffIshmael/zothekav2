@@ -53,7 +53,7 @@ function getCdpClient() {
     cdpClient = new CdpClient({
       apiKeyId: process.env.CDP_API_KEY_ID!,
       apiKeySecret: process.env.CDP_API_KEY_SECRET!,
-      walletSecret: process.env.WALLET_SECRET || "dummy-secret-if-not-using-cdp-wallets",
+      walletSecret: process.env.WALLET_SECRET || "",
     });
   }
   return cdpClient;
