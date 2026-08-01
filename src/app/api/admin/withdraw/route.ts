@@ -181,8 +181,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No deposit address returned from ElementPay" }, { status: 500 });
     }
 
-    // 3. EIP-7702 Transaction with viem (Using Paymaster if configured)
-    const { publicClient, walletClient, account } = getClients();
+    // 3. EIP-7702 Transaction with CDP SDK
+    const { getCdpSmartAccount } = await import("@/lib/cdp-paymaster");
+    const { delegated, paymasterUrl } = await getCdpSmartAccount();
     const amountToTransfer = BigInt(Math.floor(Number(safeAmountUsdc) * 1e6)); 
 
     const data = encodeFunctionData({
@@ -191,18 +192,22 @@ export async function POST(req: NextRequest) {
       args: [depositAddress as `0x${string}`, amountToTransfer],
     });
 
-    const authorization = await walletClient.signAuthorization({
-      account,
-      contractAddress: "0x7702cb554e6bFb442cb743A7dF23154544a7176C",
+    const { userOpHash } = await delegated.sendUserOperation({
+        network: "base",
+        calls: [{
+            to: USDC_ADDRESS as `0x${string}`,
+            data,
+        }],
+        paymasterUrl,
     });
 
-    const hash = await walletClient.sendTransaction({
-      account,
-      to: USDC_ADDRESS,
-      data,
-      authorizationList: [authorization],
-      chain: walletClient.chain
-    });
+    const result = await delegated.waitForUserOperation({ userOpHash });
+    
+    if (result.status !== "complete") {
+        throw new Error(`User operation failed: ${userOpHash}`);
+    }
+
+    const hash = result.transactionHash;
 
     // 4. Log to admin_logs
     await pool.query(
