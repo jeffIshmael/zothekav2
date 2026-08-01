@@ -15,6 +15,7 @@ import {
   Clock,
   Wallet,
   X,
+  Send,
 } from "lucide-react";
 
 export default function AdminDashboard() {
@@ -39,6 +40,14 @@ export default function AdminDashboard() {
   const [withdrawKsh, setWithdrawKsh] = useState("");
   const [withdrawing, setWithdrawing] = useState(false);
   const [withdrawSuccess, setWithdrawSuccess] = useState(false);
+
+  // Transfer state
+  const [showTransfer, setShowTransfer] = useState(false);
+  const [transferAddress, setTransferAddress] = useState("");
+  const [transferAmount, setTransferAmount] = useState("");
+  const [transferring, setTransferring] = useState(false);
+  const [transferSuccess, setTransferSuccess] = useState(false);
+  const [transferErrorMsg, setTransferErrorMsg] = useState("");
 
   // Activity log state
   const [showActivity, setShowActivity] = useState(false);
@@ -152,6 +161,32 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleTransfer = async () => {
+    if (!transferAddress || !transferAmount || isNaN(Number(transferAmount))) return;
+    setTransferring(true);
+    setTransferErrorMsg("");
+    try {
+      const res = await fetch("/api/admin/transfer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          destination: transferAddress.trim(),
+          amountUsdc: transferAmount,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Transfer failed");
+      setTransferSuccess(true);
+      fetchTreasury();
+      fetchActivity();
+    } catch (e: any) {
+      setTransferErrorMsg(e.message);
+    } finally {
+      setTransferring(false);
+    }
+  };
+
   if (authLoading || loading) {
     return (
       <div className="flex h-[80vh] items-center justify-center">
@@ -211,17 +246,31 @@ export default function AdminDashboard() {
                 </p>
               )}
             </div>
-            <button
-              onClick={() => {
-                setShowWithdraw(true);
-                setWithdrawSuccess(false);
-                setErrorMsg("");
-                setWithdrawKsh("");
-              }}
-              className="flex shrink-0 items-center gap-2 rounded-full bg-brand-green px-4 py-2.5 text-sm font-bold text-white transition hover:bg-brand-green-dark"
-            >
-              <ArrowRightLeft className="h-4 w-4" /> Withdraw
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setShowTransfer(true);
+                  setTransferSuccess(false);
+                  setTransferErrorMsg("");
+                  setTransferAddress("");
+                  setTransferAmount("");
+                }}
+                className="flex shrink-0 items-center gap-2 rounded-full bg-brand-gray/30 px-4 py-2.5 text-sm font-bold text-brand-black transition hover:bg-brand-gray/50"
+              >
+                <Send className="h-4 w-4" /> Transfer
+              </button>
+              <button
+                onClick={() => {
+                  setShowWithdraw(true);
+                  setWithdrawSuccess(false);
+                  setErrorMsg("");
+                  setWithdrawKsh("");
+                }}
+                className="flex shrink-0 items-center gap-2 rounded-full bg-brand-green px-4 py-2.5 text-sm font-bold text-white transition hover:bg-brand-green-dark"
+              >
+                <ArrowRightLeft className="h-4 w-4" /> Withdraw
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -452,6 +501,82 @@ export default function AdminDashboard() {
                     className="flex flex-1 items-center justify-center gap-2 rounded-full bg-brand-green py-3 font-bold text-white hover:bg-brand-green-dark disabled:opacity-50"
                   >
                     {withdrawing ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirm"}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+      {/* Transfer Modal */}
+      {showTransfer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
+            <h2 className="mb-1 text-2xl font-black text-brand-black">Transfer USDC</h2>
+            <p className="mb-6 text-sm text-muted">Send funds to an external wallet address.</p>
+
+            {transferSuccess ? (
+              <div className="py-6 text-center">
+                <CheckCircle2 className="mx-auto mb-4 h-16 w-16 text-brand-green" />
+                <h3 className="mb-2 text-xl font-bold text-brand-black">Transfer Successful!</h3>
+                <p className="mb-6 text-sm text-muted">Your transaction has been submitted to the blockchain.</p>
+                <button onClick={() => setShowTransfer(false)} className="w-full rounded-full bg-brand-black px-4 py-3 font-bold text-white">
+                  Close
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="mb-4">
+                  <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-muted">Destination Address</label>
+                  <input
+                    type="text"
+                    value={transferAddress}
+                    onChange={e => setTransferAddress(e.target.value)}
+                    placeholder="0x..."
+                    className="w-full rounded-xl bg-brand-gray/30 p-3 font-mono text-sm text-brand-black outline-none focus:ring-2 focus:ring-brand-green"
+                  />
+                </div>
+                
+                <div className="mb-4">
+                  <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-muted">Amount in USDC</label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-3 font-bold text-brand-black">$</span>
+                    <input
+                      type="number"
+                      value={transferAmount}
+                      onChange={e => setTransferAmount(e.target.value)}
+                      placeholder="0.00"
+                      className="w-full rounded-xl bg-brand-gray/30 py-3 pl-10 pr-16 font-black text-brand-black outline-none focus:ring-2 focus:ring-brand-green"
+                    />
+                    <button 
+                      onClick={() => setTransferAmount(treasury?.balanceUsdc?.toString() || "0")}
+                      className="absolute right-2 top-2 rounded-lg bg-white px-2 py-1 text-xs font-bold text-brand-green shadow-sm hover:bg-brand-gray/30"
+                    >
+                      MAX
+                    </button>
+                  </div>
+                  <p className="mt-2 text-xs font-medium text-muted">
+                    Available: {treasury?.balanceUsdc?.toFixed(2) || "0.00"} USDC
+                  </p>
+                </div>
+
+                {transferErrorMsg && (
+                  <div className="mb-4 flex items-start gap-2 rounded-xl bg-red-50 p-3 text-red-600">
+                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                    <p className="text-xs font-bold">{transferErrorMsg}</p>
+                  </div>
+                )}
+
+                <div className="mt-6 flex gap-3">
+                  <button onClick={() => setShowTransfer(false)} className="flex-1 rounded-full bg-brand-gray/50 py-3 font-bold text-brand-black hover:bg-brand-gray">
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleTransfer}
+                    disabled={transferring || !transferAmount || !transferAddress}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-full bg-brand-green py-3 font-bold text-white hover:bg-brand-green-dark disabled:opacity-50"
+                  >
+                    {transferring ? <Loader2 className="h-4 w-4 animate-spin" /> : "Send"}
                   </button>
                 </div>
               </>
