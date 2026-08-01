@@ -5,6 +5,7 @@ const backendUrl =
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  serverExternalPackages: ["@coinbase/cdp-sdk"],
   transpilePackages: ["@privy-io/react-auth"],
   async rewrites() {
     // Proxy API calls through Next.js so the browser avoids cross-origin (CORS) blocks.
