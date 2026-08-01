@@ -5,12 +5,13 @@ import { CdpClient, toEvmDelegatedAccount } from "@coinbase/cdp-sdk";
 import crypto from "crypto";
 
 export function getTreasuryPrivateKey(): `0x${string}` {
+  if (process.env.TREASURY_PRIVATE_KEY) {
+    return process.env.TREASURY_PRIVATE_KEY as `0x${string}`;
+  }
+
   const secret = process.env.WALLET_SECRET;
   if (!secret) {
-    if (process.env.TREASURY_PRIVATE_KEY) {
-       return process.env.TREASURY_PRIVATE_KEY as `0x${string}`;
-    }
-    throw new Error("WALLET_SECRET or TREASURY_PRIVATE_KEY is not set");
+    throw new Error("TREASURY_PRIVATE_KEY or WALLET_SECRET is not set");
   }
 
   try {
@@ -24,10 +25,7 @@ export function getTreasuryPrivateKey(): `0x${string}` {
     const hex = "0x" + Buffer.from(jwk.d!, "base64url").toString("hex");
     return hex as `0x${string}`;
   } catch (e) {
-    if (process.env.TREASURY_PRIVATE_KEY) {
-       return process.env.TREASURY_PRIVATE_KEY as `0x${string}`;
-    }
-    throw new Error("Invalid WALLET_SECRET format and no fallback TREASURY_PRIVATE_KEY");
+    throw new Error("Invalid WALLET_SECRET format");
   }
 }
 
