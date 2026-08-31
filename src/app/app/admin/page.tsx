@@ -23,7 +23,8 @@ export default function AdminDashboard() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [purchases, setPurchases] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<"Not Full" | "Awaiting Upgrade" | "Completed">("Awaiting Upgrade");
+  const [failedPurchases, setFailedPurchases] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<"Not Full" | "Awaiting Upgrade" | "Completed" | "Failed">("Awaiting Upgrade");
   const [errorMsg, setErrorMsg] = useState("");
 
   const adminEmails = process.env.NEXT_PUBLIC_ADMIN_EMAILS
@@ -58,6 +59,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (email) {
       fetchPurchases();
+      fetchFailedPurchases();
       fetchTreasury();
       fetchActivity();
     }
@@ -78,6 +80,19 @@ export default function AdminDashboard() {
       console.error(e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchFailedPurchases = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/purchases/failed`, {
+        headers: { "X-User-Email": email || "" },
+      });
+      if (res.ok) {
+        setFailedPurchases(await res.json());
+      }
+    } catch (e) {
+      console.error(e);
     }
   };
 
@@ -126,6 +141,7 @@ export default function AdminDashboard() {
       });
       if (res.ok) {
         fetchPurchases();
+        fetchFailedPurchases();
         fetchActivity();
       }
     } catch (e) {
@@ -195,18 +211,30 @@ export default function AdminDashboard() {
     );
   }
 
-  // Grouping logic
-  const notFull = purchases.filter(p => p.status !== "COMPLETED" && p.joined_peers < p.total_peers);
-  const awaitingUpgrade = purchases.filter(p => p.status !== "COMPLETED" && (!p.is_peer || p.joined_peers >= p.total_peers));
+  // Grouping logic — backend only returns purchases where initiator payment settled (PAID)
+  const notFull = purchases.filter(
+    p => p.status !== "COMPLETED" && p.is_peer && p.joined_peers < p.total_peers
+  );
+  const awaitingUpgrade = purchases.filter(
+    p => p.status !== "COMPLETED" && (!p.is_peer || p.joined_peers >= p.total_peers)
+  );
   const completed = purchases.filter(p => p.status === "COMPLETED");
 
   const tabs: { label: typeof activeTab; count?: number }[] = [
     { label: "Not Full", count: notFull.length },
     { label: "Awaiting Upgrade", count: awaitingUpgrade.length },
     { label: "Completed", count: completed.length },
+    { label: "Failed", count: failedPurchases.length },
   ];
 
-  const currentList = activeTab === "Not Full" ? notFull : activeTab === "Awaiting Upgrade" ? awaitingUpgrade : completed;
+  const currentList =
+    activeTab === "Not Full"
+      ? notFull
+      : activeTab === "Awaiting Upgrade"
+        ? awaitingUpgrade
+        : activeTab === "Completed"
+          ? completed
+          : [];
 
   const kshBalance = treasury?.balanceUsdc != null ? treasury.balanceUsdc * (treasury?.indicativeRate || 130) : null;
 
@@ -303,7 +331,86 @@ export default function AdminDashboard() {
 
       {/* Orders list */}
       <div className="space-y-4">
-        {currentList.length === 0 ? (
+        {activeTab === "Failed" ? (
+          failedPurchases.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-border py-12 text-center text-muted">
+              No failed payments recorded.
+            </div>
+          ) : (
+            failedPurchases.map(f => (
+              <div key={f.id} className="rounded-2xl border border-red-200 bg-surface p-5 shadow-sm">
+                <div className="mb-4 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                  <div>
+                    <div className="mb-1 flex items-center gap-2">
+                      <h3 className="text-lg font-black text-brand-black">{f.product_name}</h3>
+                      <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-red-700">
+                        {f.status}
+                      </span>
+                      {f.is_peer ? (
+                        <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-700">
+                          Group
+                        </span>
+                      ) : (
+                        <span className="rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-purple-700">
+                          Solo
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted">
+                      Initiator: {f.initiator_email}
+                      {f.user_email !== f.initiator_email && ` · Failed member: ${f.user_email}`}
+                    </p>
+                  </div>
+                  <div className="text-left md:text-right">
+                    <p className="text-sm font-bold text-brand-black">{f.amount_mwk?.toLocaleString()} MWK</p>
+                    <p className="text-xs text-muted">
+                      {f.updated_at ? new Date(f.updated_at).toLocaleString() : "—"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="rounded-xl bg-brand-gray/30 p-4">
+                  <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted">Contact Details</p>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div>
+                      <p className="mb-1 text-xs text-muted">User Email</p>
+                      <div className="flex items-center gap-2">
+                        <p className="truncate font-semibold text-brand-black">{f.user_email}</p>
+                        <CopyBtn text={f.user_email} />
+                      </div>
+                    </div>
+                    <div>
+                      <p className="mb-1 text-xs text-muted">Phone</p>
+                      <div className="flex items-center gap-2">
+                        <p className="truncate font-semibold text-brand-black">
+                          {f.payment_phone_number || f.kyc_phone || "N/A"}
+                        </p>
+                        {(f.payment_phone_number || f.kyc_phone) && (
+                          <CopyBtn text={f.payment_phone_number || f.kyc_phone} />
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="mb-1 text-xs text-muted">Spotify Email</p>
+                      <div className="flex items-center gap-2">
+                        <p className="truncate font-semibold text-brand-black">
+                          {f.participant_target_email || f.purchase_target_email || "N/A"}
+                        </p>
+                        {(f.participant_target_email || f.purchase_target_email) && (
+                          <CopyBtn text={f.participant_target_email || f.purchase_target_email} />
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="mb-1 text-xs text-muted">Element Pay Order</p>
+                      <p className="truncate font-mono text-xs text-muted">{f.element_pay_order_id || "N/A"}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))
+          )
+        ) : currentList.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border py-12 text-center text-muted">
             No orders found in this category.
           </div>
