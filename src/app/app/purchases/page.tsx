@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useAuth } from "@/lib/auth";
+import { API_BASE_URL } from "@/lib/config";
 
 export type Purchase = {
   id: string;
@@ -36,8 +37,7 @@ export default function PurchasesPage() {
         return;
       }
       try {
-        const baseUrl = process.env.NEXT_PUBLIC_ZOTHEKA_WEB_URL?.replace(/\/$/, "") ?? "";
-        const res = await fetch(`${baseUrl}/api/purchases`, {
+        const res = await fetch(`${API_BASE_URL}/purchases`, {
           headers: {
             "Content-Type": "application/json",
             "X-User-Email": email

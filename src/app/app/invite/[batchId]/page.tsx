@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useAppData } from "@/lib/app-data";
 import { useAuth } from "@/lib/auth";
+import { API_BASE_URL } from "@/lib/config";
 
 export default function InvitePage() {
     const params = useParams();
@@ -46,8 +47,7 @@ export default function InvitePage() {
         if (!batchId) return;
         const fetchInvite = async () => {
             try {
-                const baseUrl = process.env.NEXT_PUBLIC_ZOTHEKA_WEB_URL?.replace(/\/$/, "") ?? "";
-                const res = await fetch(`${baseUrl}/api/invites/${batchId}`);
+                const res = await fetch(`${API_BASE_URL}/invites/${batchId}`);
                 if (!res.ok) {
                     throw new Error("Invite not found");
                 }
@@ -78,10 +78,8 @@ export default function InvitePage() {
         setPromptSent(true);
         await new Promise(resolve => setTimeout(resolve, 5000));
         
-        const baseUrl = process.env.NEXT_PUBLIC_ZOTHEKA_WEB_URL?.replace(/\/$/, "") ?? "http://localhost:5000";
-
         try {
-            const res = await fetch(`${baseUrl}/api/invites/${batchId}/join`, {
+            const res = await fetch(`${API_BASE_URL}/invites/${batchId}/join`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -109,7 +107,7 @@ export default function InvitePage() {
 
             // Poll for payment success
             const checkStatus = async () => {
-                const pollRes = await fetch(`${baseUrl}/api/purchases`, {
+                const pollRes = await fetch(`${API_BASE_URL}/purchases`, {
                     headers: {
                         "X-User-Email": email || "unknown@example.com"
                     }
@@ -120,7 +118,7 @@ export default function InvitePage() {
                     const purchase = purchases.find((p: any) => p.batch_id === batchId);
                     if (purchase) {
                         // Fetch details
-                        const detailRes = await fetch(`${baseUrl}/api/purchases/${purchase.id}`, {
+                        const detailRes = await fetch(`${API_BASE_URL}/purchases/${purchase.id}`, {
                             headers: { "X-User-Email": email || "unknown@example.com" }
                         });
                         if (detailRes.ok) {

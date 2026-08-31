@@ -344,7 +344,7 @@ export default function AdminDashboard() {
                     <div className="mb-1 flex items-center gap-2">
                       <h3 className="text-lg font-black text-brand-black">{f.product_name}</h3>
                       <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-red-700">
-                        {f.status}
+                        {f.status === "PENDING" ? "INCOMPLETE" : f.status}
                       </span>
                       {f.is_peer ? (
                         <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-700">

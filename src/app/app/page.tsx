@@ -9,6 +9,7 @@ import { usePrivy } from "@privy-io/react-auth";
 import { useSmartWallets } from "@privy-io/react-auth/smart-wallets";
 import { useAuth } from "@/lib/auth";
 import { useAppData } from "@/lib/app-data";
+import { API_BASE_URL } from "@/lib/config";
 
 const KSH_TO_USD_RATE = 130;
 const CONCIERGE_FEE_USD = 1;
@@ -81,7 +82,6 @@ export default function HomePage() {
     setPaymentPrompting(true);
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_ZOTHEKA_WEB_URL?.replace(/\/$/, "") ?? "http://localhost:5000";
       const payload = {
         productName: selectedPkg.name,
         targetEmail,
@@ -91,7 +91,7 @@ export default function HomePage() {
         totalPeers: members
       };
 
-      const res = await fetch(`${baseUrl}/api/purchases`, {
+      const res = await fetch(`${API_BASE_URL}/purchases`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -113,7 +113,7 @@ export default function HomePage() {
 
       // Poll for payment success
       const checkStatus = async () => {
-        const pollRes = await fetch(`${baseUrl}/api/purchases/${purchaseId}`, {
+        const pollRes = await fetch(`${API_BASE_URL}/purchases/${purchaseId}`, {
           headers: {
             "X-User-Email": email || ""
           }
