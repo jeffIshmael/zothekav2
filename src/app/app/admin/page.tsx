@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { useRouter, notFound } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import { API_BASE_URL } from "@/lib/config";
@@ -13,7 +14,6 @@ import {
   Check,
   Activity,
   Clock,
-  Wallet,
   X,
   Send,
 } from "lucide-react";
@@ -259,36 +259,65 @@ export default function AdminDashboard() {
         </div>
 
         {treasury && (
-          <div className="flex items-center gap-4 rounded-2xl border border-border bg-surface p-4 shadow-sm">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-green/10">
-              <Wallet className="h-5 w-5 text-brand-green" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs font-bold uppercase tracking-wider text-muted">Treasury (EOA)</p>
-              <p className="text-xl font-black leading-tight text-brand-black">
-                ${treasury.balanceUsdc?.toFixed(2)}
-                <span className="ml-1 text-xs font-bold text-muted">USDC</span>
-              </p>
-              {kshBalance != null && (
-                <p className="text-xs font-semibold text-muted">
-                  ≈ KSh {kshBalance.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+          <div className="w-full shrink-0 rounded-2xl border border-border bg-surface shadow-sm md:w-[340px]">
+            <div className="p-5 pb-4">
+              <p className="mb-4 text-xs font-bold uppercase tracking-wider text-muted">Treasury · EOA</p>
+
+              <div className="mb-4 flex items-center gap-3">
+                <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full ring-2 ring-[#2775CA]/20">
+                  <Image
+                    src="/images/usdclogo.png"
+                    alt="USDC"
+                    width={44}
+                    height={44}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-2xl font-black leading-none text-brand-black">
+                    {treasury.balanceUsdc?.toFixed(2)}
+                    <span className="ml-1.5 text-sm font-bold text-muted">USDC</span>
+                  </p>
+                  {kshBalance != null && (
+                    <p className="mt-1 text-xs font-semibold text-muted">
+                      ≈ KSh {kshBalance.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div
+                className={`mb-3 rounded-xl px-3 py-2.5 ${
+                  ethLow ? "border border-amber-200 bg-amber-50" : "bg-brand-gray/25"
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs font-bold uppercase tracking-wide text-muted">Gas (Base)</p>
+                  {ethLow && (
+                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase text-amber-700">
+                      Low
+                    </span>
+                  )}
+                </div>
+                <p className={`mt-0.5 text-sm font-black ${ethLow ? "text-amber-700" : "text-brand-black"}`}>
+                  {treasury.balanceEth?.toFixed(6) ?? "0.000000"} ETH
                 </p>
-              )}
-              <p className={`mt-1 text-xs font-bold ${ethLow ? "text-amber-600" : "text-muted"}`}>
-                {treasury.balanceEth?.toFixed(6) ?? "0.000000"} ETH
-                <span className="ml-1 font-semibold">for gas</span>
-                {ethLow && <span className="ml-1">· top up on Base</span>}
-              </p>
+                {ethLow && (
+                  <p className="mt-0.5 text-[10px] font-semibold text-amber-600">Top up ETH to send USDC</p>
+                )}
+              </div>
+
               {treasury.address && (
-                <div className="mt-0.5 flex items-center gap-1">
-                  <p className="truncate font-mono text-[10px] text-muted" title={treasury.address}>
+                <div className="flex items-center gap-1.5 rounded-lg bg-brand-gray/20 px-2.5 py-2">
+                  <p className="min-w-0 flex-1 truncate font-mono text-[10px] text-muted" title={treasury.address}>
                     {treasury.address}
                   </p>
                   <CopyBtn text={treasury.address} />
                 </div>
               )}
             </div>
-            <div className="flex gap-2">
+
+            <div className="flex gap-2 border-t border-border p-4">
               <button
                 onClick={() => {
                   setShowTransfer(true);
@@ -297,7 +326,7 @@ export default function AdminDashboard() {
                   setTransferAddress("");
                   setTransferAmount("");
                 }}
-                className="flex shrink-0 items-center gap-2 rounded-full bg-brand-gray/30 px-4 py-2.5 text-sm font-bold text-brand-black transition hover:bg-brand-gray/50"
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-brand-gray/30 py-2.5 text-sm font-bold text-brand-black transition hover:bg-brand-gray/50"
               >
                 <Send className="h-4 w-4" /> Transfer
               </button>
@@ -308,7 +337,7 @@ export default function AdminDashboard() {
                   setErrorMsg("");
                   setWithdrawKsh("");
                 }}
-                className="flex shrink-0 items-center gap-2 rounded-full bg-brand-green px-4 py-2.5 text-sm font-bold text-white transition hover:bg-brand-green-dark"
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-brand-green py-2.5 text-sm font-bold text-white transition hover:bg-brand-green-dark"
               >
                 <ArrowRightLeft className="h-4 w-4" /> Withdraw
               </button>
