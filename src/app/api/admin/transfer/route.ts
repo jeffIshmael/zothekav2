@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getClients } from "@/lib/cdp-paymaster";
-import { erc20Abi, encodeFunctionData, isAddress } from "viem";
+import {
+  getTreasuryBalances,
+  sendTreasuryUsdcTransfer,
+} from "@/lib/cdp-paymaster";
+import { isAddress } from "viem";
 import { Pool } from "pg";
-
-const USDC_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
+import crypto from "crypto";
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
+  ssl: { rejectUnauthorized: false },
 });
 
 function isAdmin(email: string) {
@@ -32,60 +34,31 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
     }
 
-    // 1. EIP-7702 Transaction with CDP SDK
-    const { getCdpSmartAccount } = await import("@/lib/cdp-paymaster");
-    const { delegated, paymasterUrl } = await getCdpSmartAccount();
-    
-    // Check balance first
-    const { publicClient, account } = getClients();
-    const balanceRaw = await publicClient.readContract({
-      address: USDC_ADDRESS,
-      abi: erc20Abi,
-      functionName: "balanceOf",
-      args: [account.address],
-    });
-    const balanceUsdc = Number(balanceRaw) / 1e6;
+    const { balanceUsdc, balanceEth } = await getTreasuryBalances();
 
     if (Number(amountUsdc) > balanceUsdc) {
       return NextResponse.json({ error: "Insufficient USDC balance" }, { status: 400 });
     }
 
-    const amountToTransfer = BigInt(Math.floor(Number(amountUsdc) * 1e6)); 
-
-    const data = encodeFunctionData({
-      abi: erc20Abi,
-      functionName: "transfer",
-      args: [destination as `0x${string}`, amountToTransfer],
-    });
-
-    const { userOpHash } = await delegated.sendUserOperation({
-        network: "base",
-        calls: [{
-            to: USDC_ADDRESS as `0x${string}`,
-            data,
-        }],
-        paymasterUrl,
-    });
-
-    const result = await delegated.waitForUserOperation({ userOpHash });
-    
-    if (result.status !== "complete") {
-        throw new Error(`User operation failed: ${userOpHash}`);
+    if (balanceEth < 0.00005) {
+      return NextResponse.json(
+        { error: "Insufficient ETH for gas. Top up the treasury wallet on Base." },
+        { status: 400 }
+      );
     }
 
-    const hash = result.transactionHash;
+    const amountToTransfer = BigInt(Math.floor(Number(amountUsdc) * 1e6));
+    const hash = await sendTreasuryUsdcTransfer(destination as `0x${string}`, amountToTransfer);
 
-    // 2. Log to admin_logs
     await pool.query(
       `INSERT INTO admin_logs (id, admin_email, action, details) VALUES ($1, $2, $3, $4)`,
-      [crypto.randomUUID(), email, "TRANSFER", `Transferred ${amountUsdc} USDC to ${destination}`]
+      [crypto.randomUUID(), email, "TRANSFER", `EOA transfer ${amountUsdc} USDC to ${destination}`]
     );
 
     return NextResponse.json({
       status: "success",
-      txHash: hash
+      txHash: hash,
     });
-
   } catch (error: any) {
     console.error("Admin Transfer POST Error:", error);
     return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 });

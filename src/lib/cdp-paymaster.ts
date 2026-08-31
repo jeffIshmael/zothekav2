@@ -1,8 +1,25 @@
-import { createPublicClient, http } from "viem";
+import { createPublicClient, createWalletClient, http, erc20Abi } from "viem";
 import { base } from "viem/chains";
 import { privateKeyToAccount } from "viem/accounts";
 import { CdpClient, toEvmDelegatedAccount } from "@coinbase/cdp-sdk";
 import crypto from "crypto";
+
+export const USDC_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" as const;
+
+/**
+ * SECURITY — EIP-7702 / ERC-4337 delegation incident (blog reference)
+ * ------------------------------------------------
+ * We previously used CDP EIP-7702 delegation + paymaster user operations for
+ * treasury USDC transfers. Signing that authorization delegated execution on our
+ * EOA; a malicious/broad executor swept the full USDC balance — not just the
+ * intended transfer amount. This was not a private-key leak (key stayed in env).
+ *
+ * Similar risks can apply to ERC-4337 smart accounts when approving session keys,
+ * batched user ops, or spend permissions without strict scoping.
+ *
+ * Admin transfer + withdraw now use plain EOA transactions (gas paid in ETH).
+ * Do NOT re-enable getCdpSmartAccount() for treasury flows without a security review.
+ */
 
 export function getTreasuryPrivateKey(): `0x${string}` {
   if (process.env.TREASURY_PRIVATE_KEY) {
@@ -33,16 +50,76 @@ export function getTreasuryAccount() {
   return privateKeyToAccount(getTreasuryPrivateKey());
 }
 
+function getBaseTransport() {
+  return http(process.env.BASE_RPC_URL || undefined);
+}
+
 export function getClients() {
   const account = getTreasuryAccount();
-  const paymasterUrl = process.env.PAYMASTER_URL;
 
   const publicClient = createPublicClient({
     chain: base,
-    transport: http(),
+    transport: getBaseTransport(),
   });
 
-  return { account, publicClient, paymasterUrl };
+  return { account, publicClient };
+}
+
+export function getTreasuryWalletClient() {
+  const account = getTreasuryAccount();
+  const publicClient = createPublicClient({
+    chain: base,
+    transport: getBaseTransport(),
+  });
+  const walletClient = createWalletClient({
+    account,
+    chain: base,
+    transport: getBaseTransport(),
+  });
+
+  return { account, publicClient, walletClient };
+}
+
+export async function getTreasuryBalances() {
+  const { account, publicClient } = getClients();
+
+  const [usdcRaw, ethWei] = await Promise.all([
+    publicClient.readContract({
+      address: USDC_ADDRESS,
+      abi: erc20Abi,
+      functionName: "balanceOf",
+      args: [account.address],
+    }),
+    publicClient.getBalance({ address: account.address }),
+  ]);
+
+  return {
+    address: account.address,
+    balanceUsdc: Number(usdcRaw) / 1e6,
+    balanceEth: Number(ethWei) / 1e18,
+  };
+}
+
+/** Plain EOA ERC-20 transfer — treasury pays gas in ETH. */
+export async function sendTreasuryUsdcTransfer(
+  to: `0x${string}`,
+  amountUsdc6: bigint
+) {
+  const { walletClient, publicClient } = getTreasuryWalletClient();
+
+  const hash = await walletClient.writeContract({
+    address: USDC_ADDRESS,
+    abi: erc20Abi,
+    functionName: "transfer",
+    args: [to, amountUsdc6],
+  });
+
+  const receipt = await publicClient.waitForTransactionReceipt({ hash });
+  if (receipt.status !== "success") {
+    throw new Error(`USDC transfer reverted: ${hash}`);
+  }
+
+  return hash;
 }
 
 let cdpClient: CdpClient | null = null;
@@ -57,6 +134,10 @@ function getCdpClient() {
   return cdpClient;
 }
 
+/**
+ * @deprecated Unsafe for treasury — see EIP-7702 incident note above.
+ * Retained only for reference; admin routes must not call this.
+ */
 export async function getCdpSmartAccount() {
   const account = getTreasuryAccount();
   const cdp = getCdpClient();

@@ -237,6 +237,7 @@ export default function AdminDashboard() {
           : [];
 
   const kshBalance = treasury?.balanceUsdc != null ? treasury.balanceUsdc * (treasury?.indicativeRate || 130) : null;
+  const ethLow = treasury?.balanceEth != null && treasury.balanceEth < 0.001;
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 md:py-10">
@@ -262,8 +263,8 @@ export default function AdminDashboard() {
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-green/10">
               <Wallet className="h-5 w-5 text-brand-green" />
             </div>
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-muted">Treasury</p>
+            <div className="min-w-0">
+              <p className="text-xs font-bold uppercase tracking-wider text-muted">Treasury (EOA)</p>
               <p className="text-xl font-black leading-tight text-brand-black">
                 ${treasury.balanceUsdc?.toFixed(2)}
                 <span className="ml-1 text-xs font-bold text-muted">USDC</span>
@@ -272,6 +273,19 @@ export default function AdminDashboard() {
                 <p className="text-xs font-semibold text-muted">
                   ≈ KSh {kshBalance.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                 </p>
+              )}
+              <p className={`mt-1 text-xs font-bold ${ethLow ? "text-amber-600" : "text-muted"}`}>
+                {treasury.balanceEth?.toFixed(6) ?? "0.000000"} ETH
+                <span className="ml-1 font-semibold">for gas</span>
+                {ethLow && <span className="ml-1">· top up on Base</span>}
+              </p>
+              {treasury.address && (
+                <div className="mt-0.5 flex items-center gap-1">
+                  <p className="truncate font-mono text-[10px] text-muted" title={treasury.address}>
+                    {treasury.address}
+                  </p>
+                  <CopyBtn text={treasury.address} />
+                </div>
               )}
             </div>
             <div className="flex gap-2">

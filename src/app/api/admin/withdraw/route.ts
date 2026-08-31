@@ -1,15 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getClients } from "@/lib/cdp-paymaster";
-import { erc20Abi, encodeFunctionData } from "viem";
+import {
+  getClients,
+  getTreasuryBalances,
+  sendTreasuryUsdcTransfer,
+  USDC_ADDRESS,
+} from "@/lib/cdp-paymaster";
 import { Pool } from "pg";
+import crypto from "crypto";
 
 const ELEMENTPAY_API = process.env.ELEMENTPAY_API_URL || "https://api.elementpay.net/api/v1";
 const API_KEY = process.env.ELEMENTPAY_LIVE_API_KEY;
-const USDC_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
+  ssl: { rejectUnauthorized: false },
 });
 
 function isAdmin(email: string) {
@@ -26,29 +30,18 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const { publicClient, account } = getClients();
+    const { address, balanceUsdc, balanceEth } = await getTreasuryBalances();
 
-    // 1. Get Treasury USDC Balance
-    const balanceRaw = await publicClient.readContract({
-      address: USDC_ADDRESS,
-      abi: erc20Abi,
-      functionName: "balanceOf",
-      args: [account.address],
-    });
-    const balanceUsdc = Number(balanceRaw) / 1e6;
-
-    // 2. Get Admin KYC
     const res = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
     const user = res.rows[0];
 
-    // 3. Get ElementPay Indicative Rate and Min Amount
-    let indicativeRate = 130; // fallback
-    let minAmount = 150; // fallback
+    let indicativeRate = 130;
+    let minAmount = 150;
 
     if (API_KEY) {
       try {
         const rateRes = await fetch(`${ELEMENTPAY_API}/partner/rates/indicative?pair=USDC_KES&direction=OffRamp`, {
-          headers: { "X-API-Key": API_KEY }
+          headers: { "X-API-Key": API_KEY },
         });
         const rateData = await rateRes.json();
         if (rateData?.data?.rate) {
@@ -56,14 +49,16 @@ export async function GET(req: NextRequest) {
         }
 
         const catalogRes = await fetch(`${ELEMENTPAY_API}/partner/catalog?country=KE&order_type=OffRamp`, {
-          headers: { "X-API-Key": API_KEY }
+          headers: { "X-API-Key": API_KEY },
         });
         const catalogData = await catalogRes.json();
         if (catalogData?.data?.offramp?.countries?.KE?.payment_methods?.mobile_money?.providers) {
-           const mpesa = catalogData.data.offramp.countries.KE.payment_methods.mobile_money.providers.find((p: any) => p.name.includes("M-PESA"));
-           if (mpesa && mpesa.min_amount) {
-              minAmount = mpesa.min_amount;
-           }
+          const mpesa = catalogData.data.offramp.countries.KE.payment_methods.mobile_money.providers.find(
+            (p: any) => p.name.includes("M-PESA")
+          );
+          if (mpesa?.min_amount) {
+            minAmount = mpesa.min_amount;
+          }
         }
       } catch (e) {
         console.error("Failed to fetch rate or catalog", e);
@@ -71,12 +66,14 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json({
+      address,
       balanceUsdc,
+      balanceEth,
       indicativeRate,
       minAmount,
       phone: user?.kyc_phone || "",
-      network: "7ea6df5c-6bba-46b2-a7e6-f511959e7edb", // M-PESA provider id fallback
-      kycVerified: user?.kyc_verified || false
+      network: "7ea6df5c-6bba-46b2-a7e6-f511959e7edb",
+      kycVerified: user?.kyc_verified || false,
     });
   } catch (error: any) {
     console.error("Admin Payout GET Error:", error);
@@ -95,6 +92,14 @@ export async function POST(req: NextRequest) {
 
     if (!API_KEY) {
       return NextResponse.json({ error: "ElementPay API key not configured" }, { status: 500 });
+    }
+
+    const { balanceEth } = await getTreasuryBalances();
+    if (balanceEth < 0.00005) {
+      return NextResponse.json(
+        { error: "Insufficient ETH for gas. Top up the treasury wallet on Base." },
+        { status: 400 }
+      );
     }
 
     const res = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
@@ -116,11 +121,8 @@ export async function POST(req: NextRequest) {
       customerName += " User";
     }
 
-    let safeAmountUsdc = Number(amountUsdc);
-    // Ensure amount is slightly padded to prevent 149.99 KES due to rate fluctuations
-    safeAmountUsdc = safeAmountUsdc * 1.02;
+    let safeAmountUsdc = Number(amountUsdc) * 1.02;
 
-    // 1. Create ElementPay Quote
     const quotePayload = {
       order_type: "OffRamp",
       customer: {
@@ -130,24 +132,24 @@ export async function POST(req: NextRequest) {
         phone: phone,
         dob: dob,
         address: "Nairobi",
-        country: "KE",       
+        country: "KE",
         id_number: user.kyc_id_number || "12345678",
-        id_type: user.kyc_id_type || "NATIONAL_ID"
+        id_type: user.kyc_id_type || "NATIONAL_ID",
       },
       payment_method: {
         type: "mobile_money",
         phone_number: phone,
-        network_id: providerId
+        network_id: providerId,
       },
       asset: {
         currency: "USDC",
         network: "BASE",
-        token: USDC_ADDRESS
+        token: USDC_ADDRESS,
       },
       crypto_amount: safeAmountUsdc,
       country: "KE",
-      currency: "KES", 
-      refund_address: getClients().account.address, 
+      currency: "KES",
+      refund_address: getClients().account.address,
     };
 
     const quoteRes = await fetch(`${ELEMENTPAY_API}/partner/orders/quote`, {
@@ -165,7 +167,6 @@ export async function POST(req: NextRequest) {
     }
     const quoteId = quoteData.data.quote_id;
 
-    // 2. Accept Quote
     const acceptRes = await fetch(`${ELEMENTPAY_API}/partner/orders/${quoteId}/accept`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "X-API-Key": API_KEY },
@@ -176,51 +177,30 @@ export async function POST(req: NextRequest) {
     }
 
     const orderPayload = acceptData.data || {};
-    const depositAddress = orderPayload.order?.wallet_address || orderPayload.accepted?.payment_instructions?.wallet_address;
+    const depositAddress =
+      orderPayload.order?.wallet_address || orderPayload.accepted?.payment_instructions?.wallet_address;
     if (!depositAddress) {
       return NextResponse.json({ error: "No deposit address returned from ElementPay" }, { status: 500 });
     }
 
-    // 3. EIP-7702 Transaction with CDP SDK
-    const { getCdpSmartAccount } = await import("@/lib/cdp-paymaster");
-    const { delegated, paymasterUrl } = await getCdpSmartAccount();
-    const amountToTransfer = BigInt(Math.floor(Number(safeAmountUsdc) * 1e6)); 
+    const amountToTransfer = BigInt(Math.floor(Number(safeAmountUsdc) * 1e6));
+    const hash = await sendTreasuryUsdcTransfer(depositAddress as `0x${string}`, amountToTransfer);
 
-    const data = encodeFunctionData({
-      abi: erc20Abi,
-      functionName: "transfer",
-      args: [depositAddress as `0x${string}`, amountToTransfer],
-    });
-
-    const { userOpHash } = await delegated.sendUserOperation({
-        network: "base",
-        calls: [{
-            to: USDC_ADDRESS as `0x${string}`,
-            data,
-        }],
-        paymasterUrl,
-    });
-
-    const result = await delegated.waitForUserOperation({ userOpHash });
-    
-    if (result.status !== "complete") {
-        throw new Error(`User operation failed: ${userOpHash}`);
-    }
-
-    const hash = result.transactionHash;
-
-    // 4. Log to admin_logs
     await pool.query(
       `INSERT INTO admin_logs (id, admin_email, action, details) VALUES ($1, $2, $3, $4)`,
-      [crypto.randomUUID(), email, "WITHDRAWAL", `Offramped ${amountUsdc} USDC to KSH (Order: ${quoteId})`]
+      [
+        crypto.randomUUID(),
+        email,
+        "WITHDRAWAL",
+        `EOA offramp ${amountUsdc} USDC to KSH (Order: ${quoteId})`,
+      ]
     );
 
     return NextResponse.json({
       status: "success",
       order: orderPayload,
-      txHash: hash
+      txHash: hash,
     });
-
   } catch (error: any) {
     console.error("Admin Payout POST Error:", error);
     return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 });
