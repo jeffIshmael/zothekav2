@@ -242,44 +242,44 @@ export default function AdminDashboard() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 md:py-10">
       {/* Header */}
-      <div className="mb-8 flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
-        <div>
-          <p className="mb-1 text-xs font-bold uppercase tracking-widest text-brand-green">Operations</p>
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-black tracking-tight text-brand-black">Admin Dashboard</h1>
-            <button
-              onClick={() => setShowActivity(true)}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-gray/30 text-muted transition hover:bg-brand-gray/50 hover:text-brand-black"
-              title="View Admin Activity"
-            >
-              <Activity className="h-5 w-5" />
-            </button>
-          </div>
-          <p className="mt-1 text-sm text-muted">Manage Spotify purchases, treasury, and team activity.</p>
+      <div className="mb-6">
+        <p className="mb-1 text-xs font-bold uppercase tracking-widest text-brand-green">Operations</p>
+        <div className="flex items-center gap-3">
+          <h1 className="text-3xl font-black tracking-tight text-brand-black">Admin Dashboard</h1>
+          <button
+            onClick={() => setShowActivity(true)}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-gray/30 text-muted transition hover:bg-brand-gray/50 hover:text-brand-black"
+            title="View Admin Activity"
+          >
+            <Activity className="h-5 w-5" />
+          </button>
         </div>
+        <p className="mt-1 text-sm text-muted">Manage Spotify purchases, treasury, and team activity.</p>
+      </div>
 
-        {treasury && (
-          <div className="w-full shrink-0 rounded-2xl border border-border bg-surface shadow-sm md:w-[340px]">
-            <div className="p-5 pb-4">
-              <p className="mb-4 text-xs font-bold uppercase tracking-wider text-muted">Treasury · EOA</p>
+      {treasury && (
+        <div className="mx-auto mb-8 max-w-2xl rounded-2xl border border-border bg-surface p-4 shadow-sm">
+          <div className="flex gap-4">
+            <div className="min-w-0 flex-1">
+              <p className="mb-3 text-xs font-bold uppercase tracking-wider text-muted">Treasury · EOA</p>
 
-              <div className="mb-4 flex items-center gap-3">
-                <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full ring-2 ring-[#2775CA]/20">
+              <div className="mb-3 flex items-center gap-3">
+                <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full ring-2 ring-[#2775CA]/20">
                   <Image
                     src="/images/usdclogo.png"
                     alt="USDC"
-                    width={44}
-                    height={44}
+                    width={40}
+                    height={40}
                     className="h-full w-full object-cover"
                   />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-2xl font-black leading-none text-brand-black">
+                  <p className="text-xl font-black leading-none text-brand-black">
                     {treasury.balanceUsdc?.toFixed(2)}
                     <span className="ml-1.5 text-sm font-bold text-muted">USDC</span>
                   </p>
                   {kshBalance != null && (
-                    <p className="mt-1 text-xs font-semibold text-muted">
+                    <p className="mt-0.5 text-xs font-semibold text-muted">
                       ≈ KSh {kshBalance.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                     </p>
                   )}
@@ -287,28 +287,28 @@ export default function AdminDashboard() {
               </div>
 
               <div
-                className={`mb-3 rounded-xl px-3 py-2.5 ${
+                className={`mb-2 rounded-lg px-3 py-2 ${
                   ethLow ? "border border-amber-200 bg-amber-50" : "bg-brand-gray/25"
                 }`}
               >
                 <div className="flex items-center justify-between gap-2">
-                  <p className="text-xs font-bold uppercase tracking-wide text-muted">Gas (Base)</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-muted">Gas (Base)</p>
                   {ethLow && (
-                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase text-amber-700">
+                    <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold uppercase text-amber-700">
                       Low
                     </span>
                   )}
                 </div>
-                <p className={`mt-0.5 text-sm font-black ${ethLow ? "text-amber-700" : "text-brand-black"}`}>
+                <p className={`text-sm font-black ${ethLow ? "text-amber-700" : "text-brand-black"}`}>
                   {treasury.balanceEth?.toFixed(6) ?? "0.000000"} ETH
                 </p>
                 {ethLow && (
-                  <p className="mt-0.5 text-[10px] font-semibold text-amber-600">Top up ETH to send USDC</p>
+                  <p className="text-[10px] font-semibold text-amber-600">Top up ETH to send USDC</p>
                 )}
               </div>
 
               {treasury.address && (
-                <div className="flex items-center gap-1.5 rounded-lg bg-brand-gray/20 px-2.5 py-2">
+                <div className="flex items-center gap-1.5 rounded-lg bg-brand-gray/20 px-2.5 py-1.5">
                   <p className="min-w-0 flex-1 truncate font-mono text-[10px] text-muted" title={treasury.address}>
                     {treasury.address}
                   </p>
@@ -317,7 +317,7 @@ export default function AdminDashboard() {
               )}
             </div>
 
-            <div className="flex gap-2 border-t border-border p-4">
+            <div className="flex shrink-0 flex-col justify-center gap-2">
               <button
                 onClick={() => {
                   setShowTransfer(true);
@@ -326,7 +326,7 @@ export default function AdminDashboard() {
                   setTransferAddress("");
                   setTransferAmount("");
                 }}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-brand-gray/30 py-2.5 text-sm font-bold text-brand-black transition hover:bg-brand-gray/50"
+                className="flex items-center justify-center gap-2 rounded-xl bg-brand-gray/30 px-4 py-2.5 text-sm font-bold text-brand-black transition hover:bg-brand-gray/50"
               >
                 <Send className="h-4 w-4" /> Transfer
               </button>
@@ -337,14 +337,14 @@ export default function AdminDashboard() {
                   setErrorMsg("");
                   setWithdrawKsh("");
                 }}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-brand-green py-2.5 text-sm font-bold text-white transition hover:bg-brand-green-dark"
+                className="flex items-center justify-center gap-2 rounded-xl bg-brand-green px-4 py-2.5 text-sm font-bold text-white transition hover:bg-brand-green-dark"
               >
                 <ArrowRightLeft className="h-4 w-4" /> Withdraw
               </button>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="mb-6 flex gap-2 overflow-x-auto no-scrollbar">
